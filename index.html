@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Offline BG Remover + Brush</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Simple styling, you can blend this later with your Peor Caso / Blizlab look -->
+  <style>
+    :root {
+      --bg: #0b0c10;
+      --panel: #151820;
+      --accent: #3fa9f5;
+      --accent-soft: rgba(63,169,245,0.15);
+      --text: #fdfdf9;
+      --muted: #9ea4b8;
+      --danger: #ff4f6a;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #1c2030 0, #05060a 55%);
+      color: var(--text);
+      display: flex;
+      min-height: 100vh;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .app {
+      width: min(1200px, 100vw - 2rem);
+      height: min(720px, 100vh - 2rem);
+      background: linear-gradient(145deg, #10121c, #05060a);
+      border-radius: 18px;
+      box-shadow:
+        0 24px 50px rgba(0, 0, 0, 0.8),
+        0 0 0 1px rgba(255, 255, 255, 0.03);
+      display: grid;
+      grid-template-rows: auto 1fr;
+      overflow: hidden;
+    }
+
+    header {
+      padding: 0.75rem 1rem;
+      background: rgba(0, 0, 0, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    header .title {
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    header .status {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    header .status span {
+      padding: 0.1rem 0.5rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 0;
+      height: 100%;
+    }
+
+    .sidebar {
+      background: rgba(0, 0, 0, 0.45);
+      border-right: 1px solid rgba(255, 255, 255, 0.04);
+      padding: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .group {
+      background: rgba(15, 20, 35, 0.9);
+      border-radius: 10px;
+      padding: 0.5rem 0.75rem 0.6rem;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .group h2 {
+      margin: 0 0 0.35rem;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .group label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      margin-top: 0.3rem;
+    }
+
+    button, .fake-input {
+      cursor: pointer;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--text);
+      font-size: 0.8rem;
+      padding: 0.35rem 0.8rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      transition: background 0.15s ease, border-color 0.15s ease, transform 0.05s ease;
+      white-space: nowrap;
+    }
+
+    button:hover, .fake-input:hover {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+    }
+
+    button:active, .fake-input:active {
+      transform: scale(0.97);
+    }
+
+    button.primary {
+      background: linear-gradient(120deg, var(--accent), #6f8bfd);
+      border-color: transparent;
+      color: #010208;
+      font-weight: 600;
+    }
+
+    button.primary[disabled] {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    button.danger {
+      border-color: rgba(255, 79, 106, 0.6);
+      color: var(--danger);
+    }
+
+    input[type="range"] {
+      width: 100%;
+    }
+
+    .pill-toggle {
+      display: inline-flex;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+      font-size: 0.8rem;
+    }
+
+    .pill-toggle button {
+      border-radius: 0;
+      border: none;
+      background: transparent;
+      flex: 1;
+      justify-content: center;
+    }
+
+    .pill-toggle button.active {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .color-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.2rem;
+    }
+
+    .color-row input[type="color"] {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: none;
+    }
+
+    .color-row span {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .hint {
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-top: 0.25rem;
+    }
+
+    .canvas-wrap {
+      position: relative;
+      background: repeating-conic-gradient(#1e212d 0% 25%, #181a24 0% 50%) 50% / 20px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    canvas {
+      max-width: 100%;
+      max-height: 100%;
+      background: transparent;
+      image-rendering: auto;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.5);
+      border-radius: 6px;
+    }
+
+    .overlay-msg {
+      position: absolute;
+      bottom: 0.75rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.78rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.6);
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    .progress {
+      font-size: 0.72rem;
+      margin-top: 0.15rem;
+      color: var(--muted);
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    @media (max-width: 900px) {
+      .app {
+        grid-template-rows: auto auto 1fr;
+        height: auto;
+      }
+      main {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+      }
+      .sidebar {
+        flex-direction: row;
+        flex-wrap: wrap;
+        max-height: 220px;
+        overflow-y: auto;
+      }
+      .group {
+        min-width: 230px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="title">BG Remover · Local AI + Brush</div>
+      <div class="status">
+        <span id="status">Load an image to begin</span>
+      </div>
+    </header>
+
+    <main>
+      <aside class="sidebar">
+        <!-- Load / Process -->
+        <div class="group">
+          <h2>Image</h2>
+          <label>Load source</label>
+          <div class="btn-row">
+            <label class="fake-input" for="fileInput">
+              <span>Choose image…</span>
+            </label>
+            <button id="btnClear" class="danger">Clear</button>
+          </div>
+          <input id="fileInput" type="file" accept="image/*" />
+          <div class="btn-row" style="margin-top:0.45rem;">
+            <button id="btnRemove" class="primary" disabled>Auto remove background</button>
+          </div>
+          <div id="downloadRow" class="btn-row" style="margin-top:0.45rem; display:none;">
+            <button id="btnDownload">Download PNG</button>
+          </div>
+          <div id="progress" class="progress"></div>
+        </div>
+
+        <!-- Brush -->
+        <div class="group">
+          <h2>Brush</h2>
+          <label for="brushSize">Brush size</label>
+          <input id="brushSize" type="range" min="5" max="80" value="25" />
+          <div class="pill-toggle" style="margin-top:0.5rem;">
+            <button id="modeErase" class="active" data-mode="erase">Erase (make transparent)</button>
+            <button id="modeRestore" data-mode="restore">Restore original</button>
+          </div>
+          <div class="hint">
+            Paint directly on the image:
+            <br />• Erase = hide / remove background
+            <br />• Restore = bring original pixels back
+          </div>
+        </div>
+
+        <!-- Background -->
+        <div class="group">
+          <h2>Background</h2>
+          <label>Solid color</label>
+          <div class="color-row">
+            <input id="bgColor" type="color" value="#000000" />
+            <span>Used when exporting PNG (composited behind transparency).</span>
+          </div>
+          <div class="hint">
+            Canvas preview uses a checkerboard. Color is only applied on export.
+          </div>
+        </div>
+      </aside>
+
+      <section class="canvas-wrap">
+        <canvas id="canvas"></canvas>
+        <div class="overlay-msg" id="overlayMsg">
+          Drop an image here or use “Choose image…”
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Dependencies: ONNX runtime + IMG.LY background-removal.
+       Version numbers may change; these are examples from docs/blog posts. -->
+  <script type="module">
+    import imglyRemoveBackground from "https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/+esm";
+    import * as ort from "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.21.0/dist/ort.min.js";
+
+    // Basic state
+    const fileInput    = document.getElementById("fileInput");
+    const btnClear     = document.getElementById("btnClear");
+    const btnRemove    = document.getElementById("btnRemove");
+    const btnDownload  = document.getElementById("btnDownload");
+    const downloadRow  = document.getElementById("downloadRow");
+    const statusEl     = document.getElementById("status");
+    const progressEl   = document.getElementById("progress");
+    const overlayMsg   = document.getElementById("overlayMsg");
+    const brushSizeEl  = document.getElementById("brushSize");
+    const modeEraseBtn = document.getElementById("modeErase");
+    const modeRestoreBtn = document.getElementById("modeRestore");
+    const bgColorEl    = document.getElementById("bgColor");
+
+    const canvas   = document.getElementById("canvas");
+    const ctx      = canvas.getContext("2d");
+    const hidden   = document.createElement("canvas");  // keeps original pixels
+    const hiddenCtx = hidden.getContext("2d");
+
+    let hasImage       = false;
+    let working        = false;
+    let brushMode      = "erase"; // "erase" | "restore"
+    let resultImageData = null;   // editable pixels (current)
+    let originalImageData = null; // original pixels (for restore)
+    let scaleX = 1;
+    let scaleY = 1;
+
+    // ---------- Helpers ----------
+    function setStatus(text) {
+      statusEl.textContent = text;
+    }
+    function setProgress(text) {
+      progressEl.textContent = text || "";
+    }
+    function setWorking(flag) {
+      working = flag;
+      btnRemove.disabled = flag || !hasImage;
+      fileInput.disabled = flag;
+    }
+
+    function fitImageDimensions(imgWidth, imgHeight, maxWidth = 1400, maxHeight = 900) {
+      let w = imgWidth;
+      let h = imgHeight;
+      const ratio = Math.min(maxWidth / w, maxHeight / h, 1);
+      w = Math.round(w * ratio);
+      h = Math.round(h * ratio);
+      return { w, h, ratioX: w / imgWidth, ratioY: h / imgHeight };
+    }
+
+    function syncImageData() {
+      if (!canvas.width || !canvas.height) return;
+      resultImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    }
+
+    function redrawFromResult() {
+      if (!resultImageData) return;
+      ctx.putImageData(resultImageData, 0, 0);
+    }
+
+    // Convert mouse/touch to image pixel coordinates
+    function getCanvasCoords(evt) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+      const clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+      const x = ((clientX - rect.left) / rect.width) * canvas.width;
+      const y = ((clientY - rect.top) / rect.height) * canvas.height;
+      return { x, y };
+    }
+
+    function paintCircle(x, y, radius, mode) {
+      if (!resultImageData || !originalImageData) return;
+      const data = resultImageData.data;
+      const orig = originalImageData.data;
+      const w = resultImageData.width;
+      const h = resultImageData.height;
+
+      const r2 = radius * radius;
+      const minX = Math.max(0, Math.floor(x - radius));
+      const maxX = Math.min(w - 1, Math.ceil(x + radius));
+      const minY = Math.max(0, Math.floor(y - radius));
+      const maxY = Math.min(h - 1, Math.ceil(y + radius));
+
+      for (let j = minY; j <= maxY; j++) {
+        for (let i = minX; i <= maxX; i++) {
+          const dx = i - x;
+          const dy = j - y;
+          if (dx*dx + dy*dy <= r2) {
+            const idx = (j * w + i) * 4;
+            if (mode === "erase") {
+              // Make transparent
+              data[idx + 3] = 0;
+            } else if (mode === "restore") {
+              // Copy original pixel back
+              data[idx    ] = orig[idx    ];
+              data[idx + 1] = orig[idx + 1];
+              data[idx + 2] = orig[idx + 2];
+              data[idx + 3] = orig[idx + 3];
+            }
+          }
+        }
+      }
+      redrawFromResult();
+    }
+
+    // ---------- Loading image ----------
+    async function loadFile(file) {
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+
+        // Fit into canvas
+        const { w, h, ratioX, ratioY } = fitImageDimensions(img.width, img.height);
+        canvas.width = w;
+        canvas.height = h;
+        hidden.width = w;
+        hidden.height = h;
+        scaleX = ratioX;
+        scaleY = ratioY;
+
+        // Draw original image on both visible + hidden canvases
+        ctx.clearRect(0, 0, w, h);
+        hiddenCtx.clearRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        hiddenCtx.drawImage(img, 0, 0, w, h);
+
+        originalImageData = hiddenCtx.getImageData(0, 0, w, h);
+        syncImageData();
+
+        hasImage = true;
+        btnRemove.disabled = false;
+        downloadRow.style.display = "none";
+        overlayMsg.style.display = "none";
+        setStatus(`Image loaded (${img.width}×${img.height})`);
+        setProgress("");
+      };
+      img.onerror = () => {
+        setStatus("Error loading image");
+      };
+      img.src = url;
+    }
+
+    fileInput.addEventListener("change", (e) => {
+      const file = e.target.files && e.target.files[0];
+      loadFile(file);
+    });
+
+    // Drag & drop
+    ["dragenter","dragover"].forEach(ev => {
+      canvas.addEventListener(ev, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        overlayMsg.textContent = "Drop image to load";
+      });
+    });
+    ["dragleave","drop"].forEach(ev => {
+      canvas.addEventListener(ev, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        overlayMsg.textContent = hasImage ? "Paint to refine mask" : "Drop an image here or use “Choose image…”";
+      });
+    });
+    canvas.addEventListener("drop", (e) => {
+      const file = e.dataTransfer.files && e.dataTransfer.files[0];
+      loadFile(file);
+    });
+
+    btnClear.addEventListener("click", () => {
+      hasImage = false;
+      canvas.width = 0;
+      canvas.height = 0;
+      hidden.width = 0;
+      hidden.height = 0;
+      originalImageData = null;
+      resultImageData = null;
+      downloadRow.style.display = "none";
+      overlayMsg.style.display = "block";
+      overlayMsg.textContent = "Drop an image here or use “Choose image…”";
+      setStatus("Cleared");
+      setProgress("");
+      btnRemove.disabled = true;
+    });
+
+    // ---------- Auto background removal ----------
+    btnRemove.addEventListener("click", async () => {
+      if (!hasImage || working) return;
+      setWorking(true);
+      setStatus("Downloading model / removing background… (first time is slower)");
+      setProgress("");
+
+      try {
+        const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+        const config = {
+          debug: false,
+          proxyToWorker: true,
+          model: "medium", // or "small"
+          progress: (key, current, total) => {
+            if (!total) return;
+            const pct = ((current / total) * 100).toFixed(1);
+            setProgress(`Downloading ${key}: ${pct}%`);
+          }
+        };
+
+        const outBlob = await imglyRemoveBackground(blob, config);
+        setProgress("Compositing result…");
+
+        const url = URL.createObjectURL(outBlob);
+        const resultImg = new Image();
+        resultImg.onload = () => {
+          URL.revokeObjectURL(url);
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(resultImg, 0, 0, canvas.width, canvas.height);
+          syncImageData();
+          // Keep originalImageData as the initial original (hiddenCtx already has it)
+          setStatus("Background removed. Use the brush to refine.");
+          setProgress("");
+          downloadRow.style.display = "flex";
+          overlayMsg.textContent = "Paint to refine mask (Erase / Restore)";
+          setWorking(false);
+        };
+        resultImg.src = url;
+      } catch (err) {
+        console.error(err);
+        setStatus("Error removing background");
+        setProgress("");
+        setWorking(false);
+      }
+    });
+
+    // ---------- Brush interaction ----------
+    let painting = false;
+
+    function startPaint(evt) {
+      if (!hasImage || working) return;
+      painting = true;
+      const { x, y } = getCanvasCoords(evt);
+      const radius = parseInt(brushSizeEl.value, 10);
+      paintCircle(x, y, radius, brushMode);
+      evt.preventDefault();
+    }
+
+    function movePaint(evt) {
+      if (!painting) return;
+      const { x, y } = getCanvasCoords(evt);
+      const radius = parseInt(brushSizeEl.value, 10);
+      paintCircle(x, y, radius, brushMode);
+      evt.preventDefault();
+    }
+
+    function endPaint(evt) {
+      painting = false;
+      evt && evt.preventDefault();
+    }
+
+    canvas.addEventListener("mousedown", startPaint);
+    canvas.addEventListener("mousemove", movePaint);
+    window.addEventListener("mouseup", endPaint);
+
+    canvas.addEventListener("touchstart", startPaint, { passive: false });
+    canvas.addEventListener("touchmove", movePaint, { passive: false });
+    window.addEventListener("touchend", endPaint, { passive: false });
+    window.addEventListener("touchcancel", endPaint, { passive: false });
+
+    modeEraseBtn.addEventListener("click", () => {
+      brushMode = "erase";
+      modeEraseBtn.classList.add("active");
+      modeRestoreBtn.classList.remove("active");
+    });
+    modeRestoreBtn.addEventListener("click", () => {
+      brushMode = "restore";
+      modeRestoreBtn.classList.add("active");
+      modeEraseBtn.classList.remove("active");
+    });
+
+    // ---------- Download w/ background color ----------
+    btnDownload.addEventListener("click", () => {
+      if (!resultImageData) return;
+      const w = canvas.width;
+      const h = canvas.height;
+      if (!w || !h) return;
+
+      const tmp = document.createElement("canvas");
+      const tctx = tmp.getContext("2d");
+      tmp.width = w;
+      tmp.height = h;
+
+      // Fill with solid background
+      tctx.fillStyle = bgColorEl.value || "#000000";
+      tctx.fillRect(0, 0, w, h);
+      // Draw current (transparent) layer on top
+      tctx.putImageData(resultImageData, 0, 0);
+
+      tmp.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "bg-edited.png";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }, "image/png");
+    });
+
+    // Initial text
+    setStatus("Load an image to begin");
+  </script>
+</body>
+</html>
