@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>BGONE – Offline AI Background Remover</title>
+  <title>BGone – Offline AI Background Remover</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
@@ -82,7 +82,7 @@
     }
 
     .top-alert .progress-bar {
-      width: 140px;
+      width: 120px;
       height: 4px;
       border-radius: 999px;
       background: rgba(255, 255, 255, 0.06);
@@ -95,6 +95,22 @@
       height: 100%;
       background: linear-gradient(90deg, var(--accent), var(--accent-strong));
       transition: width 0.15s linear;
+    }
+
+    .top-alert .mini-btn {
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: rgba(0, 0, 0, 0.45);
+      padding: 0.25rem 0.7rem;
+      font-size: 0.75rem;
+      color: var(--text);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .top-alert .mini-btn:hover {
+      background: rgba(0, 0, 0, 0.75);
+      border-color: var(--accent);
     }
 
     header {
@@ -117,6 +133,10 @@
       letter-spacing: 0.18em;
       color: var(--title);
       text-transform: uppercase;
+    }
+
+    .title-main span.small-cap {
+      text-transform: none;
     }
 
     .title-sub {
@@ -366,8 +386,9 @@
     <div class="top-alert">
       <span class="label">Note</span>
       <span class="message" id="topMessage">
-        First time you use BGONE, it downloads an AI model in your browser. Progress will show here.
+        First time you use BGone, it downloads an AI model in your browser. You can preload it for offline use.
       </span>
+      <button class="mini-btn" id="btnPreload">Download model</button>
       <div class="progress-bar">
         <div class="progress-inner" id="topProgress"></div>
       </div>
@@ -375,7 +396,9 @@
 
     <header>
       <div class="title-block">
-        <div class="title-main">BGONE</div>
+        <div class="title-main">
+          BG<span class="small-cap">one</span>
+        </div>
         <div class="title-sub">Offline AI background remover with manual brush refinement.</div>
       </div>
       <div class="status-chip" id="status">Load an image to begin.</div>
@@ -437,27 +460,28 @@
     </main>
 
     <footer>
-      <div>BGONE – local AI cutouts for photos, thumbnails and mockups.</div>
+      <div>BGone – local AI cutouts for photos, thumbnails and mockups.</div>
       <div>Made by Alex Blizky – see also <a href="https://blizky.github.io/multisearch/" target="_blank" rel="noreferrer">Multi-Search</a>.</div>
     </footer>
   </div>
 
   <script type="module">
-    import imglyRemoveBackground from "https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.8/+esm";
+    import imglyRemoveBackground, { preload } from "https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.8/+esm";
 
     // DOM refs
-    const fileInput     = document.getElementById("fileInput");
-    const btnClear      = document.getElementById("btnClear");
-    const btnRemove     = document.getElementById("btnRemove");
-    const btnDownload   = document.getElementById("btnDownload");
-    const statusEl      = document.getElementById("status");
-    const overlayMsg    = document.getElementById("overlayMsg");
-    const progressText  = document.getElementById("progressText");
-    const topMessage    = document.getElementById("topMessage");
-    const topProgress   = document.getElementById("topProgress");
-    const brushSizeEl   = document.getElementById("brushSize");
-    const modeEraseBtn  = document.getElementById("modeErase");
-    const modeRestoreBtn= document.getElementById("modeRestore");
+    const fileInput      = document.getElementById("fileInput");
+    const btnClear       = document.getElementById("btnClear");
+    const btnRemove      = document.getElementById("btnRemove");
+    const btnDownload    = document.getElementById("btnDownload");
+    const btnPreload     = document.getElementById("btnPreload");
+    const statusEl       = document.getElementById("status");
+    const overlayMsg     = document.getElementById("overlayMsg");
+    const progressText   = document.getElementById("progressText");
+    const topMessage     = document.getElementById("topMessage");
+    const topProgress    = document.getElementById("topProgress");
+    const brushSizeEl    = document.getElementById("brushSize");
+    const modeEraseBtn   = document.getElementById("modeErase");
+    const modeRestoreBtn = document.getElementById("modeRestore");
 
     const canvas   = document.getElementById("canvas");
     const ctx      = canvas.getContext("2d");
@@ -471,6 +495,8 @@
     let resultImageData   = null;
     let originalImageData = null;
 
+    const MODEL_READY_KEY = "bgoneModelReady";
+
     function setStatus(text) {
       statusEl.textContent = text;
     }
@@ -479,6 +505,7 @@
       working = flag;
       btnRemove.disabled = flag || !hasImage;
       fileInput.disabled = flag;
+      btnPreload.disabled = flag;
     }
 
     function setDownloadEnabled(flag) {
@@ -492,6 +519,21 @@
       }
       const clamped = Math.max(0, Math.min(100, pct));
       topProgress.style.width = clamped + "%";
+    }
+
+    function markModelReady() {
+      localStorage.setItem(MODEL_READY_KEY, "1");
+      btnPreload.style.display = "none";
+      topMessage.textContent = "Model cached in this browser. BGone can now work offline.";
+      setTopProgress(0);
+    }
+
+    function checkModelReady() {
+      if (localStorage.getItem(MODEL_READY_KEY) === "1") {
+        btnPreload.style.display = "none";
+        topMessage.textContent = "Model cached in this browser. BGone can now work offline.";
+        setTopProgress(0);
+      }
     }
 
     function fitImageDimensions(imgWidth, imgHeight, maxWidth = 1400, maxHeight = 900) {
@@ -581,7 +623,6 @@
         overlayMsg.style.display = "none";
         setStatus(`Image loaded (${img.width} × ${img.height}).`);
         progressText.textContent = "";
-        setTopProgress(0);
       };
       img.onerror = () => {
         setStatus("Error loading image.");
@@ -631,8 +672,38 @@
       overlayMsg.textContent = "Drop an image here, or use “Choose image…”.";
       setStatus("Cleared.");
       progressText.textContent = "";
-      setTopProgress(0);
       setDownloadEnabled(false);
+    });
+
+    // Preload model button
+    btnPreload.addEventListener("click", async () => {
+      setWorking(true);
+      topMessage.textContent = "Downloading model for offline use…";
+      setTopProgress(5);
+      progressText.textContent = "Preloading AI model…";
+
+      try {
+        const config = {
+          debug: true,
+          progress: (key, current, total) => {
+            if (!total) return;
+            const pct = (current / total) * 100;
+            progressText.textContent = `Downloading ${key}: ${pct.toFixed(1)}%`;
+            setTopProgress(pct);
+          }
+        };
+        await preload(config);
+        markModelReady();
+        progressText.textContent = "";
+        setStatus("Model downloaded. Ready to remove backgrounds.");
+      } catch (err) {
+        console.error(err);
+        const msg = (err && (err.message || err.toString?.())) || "Unknown error";
+        topMessage.textContent = "Error downloading model: " + msg;
+        setTopProgress(0);
+      } finally {
+        setWorking(false);
+      }
     });
 
     // Auto remove background
@@ -640,14 +711,12 @@
       if (!hasImage || working) return;
       setWorking(true);
       setStatus("Removing background… model may download on first run.");
-      topMessage.textContent = "Downloading and running the model locally. This happens only once per browser.";
       progressText.textContent = "Preparing image…";
-      setTopProgress(5);
+      setTopProgress(10);
 
       try {
-        const blob = await new Promise(resolve =>
-          canvas.toBlob(resolve, "image/png")
-        );
+        // Use data URL instead of Blob to avoid null toBlob issues
+        const dataUrl = canvas.toDataURL("image/png");
 
         const config = {
           debug: true,
@@ -659,7 +728,7 @@
           }
         };
 
-        const outBlob = await imglyRemoveBackground(blob, config);
+        const outBlob = await imglyRemoveBackground(dataUrl, config);
         progressText.textContent = "Compositing result…";
         setTopProgress(100);
 
@@ -674,6 +743,7 @@
           progressText.textContent = "";
           setTopProgress(0);
           setWorking(false);
+          markModelReady(); // if this succeeded, model is definitely cached
         };
         resultImg.onerror = () => {
           setStatus("Error rendering result.");
@@ -764,6 +834,7 @@
     // Initial
     setStatus("Load an image to begin.");
     setDownloadEnabled(false);
+    checkModelReady();
   </script>
 </body>
 </html>
