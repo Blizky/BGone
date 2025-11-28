@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>BGone – Offline AI Background Remover</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root {
+      --bg-main: #020509;
+      --bg-card: #050a12;
+      --border-subtle: rgba(255, 255, 255, 0.05);
+
+      --accent: #0099cc;
+      --accent-soft: rgba(0, 153, 204, 0.18);
+      --accent-strong: #00c0ff;
+
+      --title: #ffcc33;
+      --text: #fdfdf9;
+      --muted: #9ea4c5;
+      --danger: #ff4f6a;
+
+      --checker-a: #181c27;
+      --checker-b: #10131f;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #1b2437 0, #020509 45%, #000 100%);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 0.75rem;
+    }
+
+    .page-alert {
+      width: 100%;
+      max-width: 1180px;
+      margin-bottom: 0.5rem;
+    }
+
+    .page-alert-inner {
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: linear-gradient(90deg, rgba(255, 204, 51, 0.12), rgba(0, 0, 0, 0.9));
+      padding: 0.35rem 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.78rem;
+    }
+
+    .page-alert-label {
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 0.72rem;
+      color: var(--title);
+      font-weight: 700;
+      padding-right: 0.6rem;
+      border-right: 1px solid rgba(255, 255, 255, 0.25);
+    }
+
+    .page-alert-text {
+      color: var(--muted);
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .page-alert-status {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .page-alert-btn {
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: rgba(0, 0, 0, 0.35);
+      padding: 0.25rem 0.7rem;
+      font-size: 0.75rem;
+      color: var(--text);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .page-alert-btn:hover { background: rgba(0, 0, 0, 0.75); border-color: var(--accent); }
+
+    .page-alert-progress { width: 110px; height: 4px; border-radius: 999px; background: rgba(255, 255, 255, 0.1); overflow: hidden; flex-shrink: 0; display: none; }
+    .page-alert-progress-inner { width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-strong)); transition: width 0.15s linear; }
+
+    .page-alert-dot { width: 8px; height: 8px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.6); background: #666; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6); display: none; }
+    .page-alert-dot.ready { background: #35d96b; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6), 0 0 10px rgba(53, 217, 107, 0.9); }
+
+    .shell {
+      width: min(1180px, 100%);
+      background: radial-gradient(circle at top left, #121a2b 0, #050a12 55%, #020509 100%);
+      border-radius: 24px;
+      box-shadow: 0 38px 90px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.04);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    header {
+      padding: 1rem 1.25rem 0.5rem;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .title-block { display: flex; flex-direction: column; gap: 0.1rem; }
+    .title-main { font-size: 2rem; font-weight: 800; letter-spacing: 0.18em; color: var(--title); text-transform: uppercase; }
+    .title-main span.small-cap { text-transform: none; }
+    .title-sub { font-size: 0.9rem; color: var(--muted); }
+
+    .status-chip {
+      font-size: 0.78rem; color: var(--muted); padding: 0.4rem 0.9rem; border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.09); background: rgba(4, 8, 18, 0.9);
+      max-width: 420px; white-space: normal; overflow: visible; text-overflow: clip; text-align: right;
+    }
+
+    main {
+      padding: 0.5rem 1.25rem 1.1rem;
+      display: grid;
+      grid-template-columns: 270px minmax(0, 1fr);
+      gap: 0.85rem;
+      height: 100%;
+    }
+
+    .side { display: flex; flex-direction: column; gap: 0.75rem; }
+
+    .card {
+      background: var(--bg-card);
+      border-radius: 18px;
+      padding: 0.7rem 0.85rem 0.85rem;
+      border: 1px solid var(--border-subtle);
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6);
+    }
+    .card h2 { margin: 0 0 0.45rem; font-size: 0.8rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+    .card label { font-size: 0.82rem; color: var(--muted); display: block; margin-bottom: 0.25rem; }
+
+    .btn-row { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.2rem; }
+
+    button, .fake-input {
+      cursor: pointer;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--text);
+      font-size: 0.8rem;
+      padding: 0.38rem 0.9rem;
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;
+      transition: background 0.16s ease, border-color 0.16s ease, transform 0.05s ease;
+      white-space: nowrap;
+    }
+    button:hover, .fake-input:hover { background: var(--accent-soft); border-color: var(--accent); }
+    button:active, .fake-input:active { transform: scale(0.97); }
+    button.primary { background: linear-gradient(135deg, var(--accent), var(--accent-strong)); color: #010307; border-color: transparent; font-weight: 600; }
+    button.primary[disabled] { opacity: 0.45; cursor: default; }
+    button.danger { color: var(--danger); border-color: rgba(255, 79, 106, 0.7); }
+    button.small { padding-inline: 0.65rem; font-size: 0.76rem; }
+
+    input[type="file"] { display: none; }
+    input[type="range"] { width: 100%; }
+
+    .pill-toggle { display: flex; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.14); overflow: hidden; margin-top: 0.5rem; }
+    .pill-toggle button { border-radius: 0; border: none; flex: 1; justify-content: center; padding-inline: 0.4rem; font-size: 0.78rem; }
+    .pill-toggle button.active { background: var(--accent-soft); color: var(--accent-strong); }
+
+    .hint { font-size: 0.72rem; color: var(--muted); margin-top: 0.35rem; line-height: 1.45; }
+
+    .progress-text { font-size: 0.72rem; color: var(--muted); margin-top: 0.25rem; min-height: 1em; }
+
+    .canvas-wrap {
+      background: repeating-conic-gradient(var(--checker-a) 0% 25%, var(--checker-b) 0% 50%) 50% / 20px 20px;
+      border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+      position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;
+    }
+
+    canvas { max-width: 100%; max-height: 100%; background: transparent; image-rendering: auto; border-radius: 8px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.7); }
+
+    .overlay-msg {
+      position: absolute; bottom: 0.75rem; left: 50%; transform: translateX(-50%);
+      padding: 0.35rem 0.9rem; border-radius: 999px; background: rgba(5, 8, 17, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.1); font-size: 0.78rem; color: var(--muted);
+      pointer-events: none; max-width: 90%; text-align: center;
+    }
+
+    .toast {
+      position: fixed; top: 1rem; right: 1rem; background: rgba(30, 10, 12, 0.9);
+      color: var(--text); border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px; padding: 0.6rem 0.8rem; font-size: 0.78rem; z-index: 9999;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+      display: none;
+    }
+    .toast.error { background: rgba(60, 10, 16, 0.9); border-color: rgba(255, 79, 106, 0.7); }
+
+    footer {
+      padding: 0.2rem 1.3rem 0.75rem; font-size: 0.72rem; color: var(--muted);
+      display: flex; justify-content: space-between; gap: 0.5rem; opacity: 0.8;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    @media (max-width: 900px) {
+      header { flex-direction: column; align-items: flex-start; }
+      main { grid-template-columns: 1fr; grid-template-rows: auto auto; height: auto; }
+      .canvas-wrap { min-height: 260px; }
+      footer { flex-direction: column; }
+    }
+
+    /* Focus visibility for accessibility */
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <!-- Top-of-page note -->
+  <div class="page-alert" role="region" aria-label="Model download status">
+    <div class="page-alert-inner">
+      <span class="page-alert-label">Note</span>
+      <span class="page-alert-text" id="topMessage">
+        To use BGone, click “Download model” once to install the AI in this browser (~40 MB).
+      </span>
+      <div class="page-alert-status">
+        <button class="page-alert-btn" id="btnPreload" aria-label="Download AI model">Download model</button>
+        <div class="page-alert-progress" id="topProgressWrap" aria-hidden="true">
+          <div class="page-alert-progress-inner" id="topProgress"></div>
+        </div>
+        <div class="page-alert-dot" id="topReadyDot" aria-hidden="true" title="Model ready"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="shell">
+    <header>
+      <div class="title-block">
+        <div class="title-main">BG<span class="small-cap">one</span></div>
+        <div class="title-sub">Offline AI background remover with manual brush refinement.</div>
+      </div>
+      <div class="status-chip" id="status" role="status" aria-live="polite">Load an image to begin.</div>
+    </header>
+
+    <main>
+      <aside class="side" aria-label="Controls">
+        <!-- IMAGE CARD -->
+        <div class="card">
+          <h2>Image</h2>
+          <label for="fileInput">Load source</label>
+          <div class="btn-row">
+            <label class="fake-input" for="fileInput" tabindex="0" aria-label="Choose image">Choose image…</label>
+            <button id="btnClear" class="danger small" aria-label="Clear image">Clear</button>
+          </div>
+          <input id="fileInput" type="file" accept="image/*" aria-label="Image file input" />
+          <div class="btn-row" style="margin-top:0.5rem;">
+            <button id="btnRemove" class="primary" aria-label="Auto remove background">Auto remove background</button>
+          </div>
+          <div class="btn-row" style="margin-top:0.3rem;">
+            <button id="btnDownload" class="small" disabled aria-label="Download PNG">Download PNG</button>
+          </div>
+          <div id="progressText" class="progress-text" aria-live="polite"></div>
+        </div>
+
+        <!-- BRUSH CARD -->
+        <div class="card">
+          <h2>Brush</h2>
+          <label for="brushSize">Brush size</label>
+          <input id="brushSize" type="range" min="5" max="120" value="28" aria-label="Brush size" />
+          <div class="pill-toggle" role="tablist" aria-label="Brush mode">
+            <button id="modeErase" class="active" data-mode="erase" role="tab" aria-selected="true">Erase</button>
+            <button id="modeRestore" data-mode="restore" role="tab" aria-selected="false">Restore</button>
+          </div>
+          <div class="hint">
+            After auto-removal, paint directly on the image:<br>
+            • <strong>Erase</strong> hides pixels (more transparency).<br>
+            • <strong>Restore</strong> brings back the original pixels.<br>
+            Shortcuts: <strong>E</strong> erase, <strong>R</strong> restore, <strong>Z</strong> undo, <strong>Y</strong> redo.
+          </div>
+        </div>
+
+        <!-- INFO CARD -->
+        <div class="card">
+          <h2>Info</h2>
+          <div class="hint">
+            • Everything runs in your browser; images are never uploaded.<br>
+            • Once the model is downloaded, BGone can work offline.<br>
+            • Checkerboard = transparent areas in the exported PNG.
+          </div>
+        </div>
+      </aside>
+
+      <section class="canvas-wrap" aria-label="Canvas area">
+        <canvas id="canvas" aria-label="Result canvas"></canvas>
+        <div class="overlay-msg" id="overlayMsg">Drop an image here, or use “Choose image…” on the left.</div>
+      </section>
+    </main>
+
+    <footer>
+      <div>BGone – local AI cutouts for photos, thumbnails and mockups.</div>
+      <div>Made by Alex Blizky – see also <a href="https://blizky.github.io/multisearch/" target="_blank" rel="noreferrer">Multi-Search</a>.</div>
+    </footer>
+  </div>
+
+  <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
+
+  <script type="module">
+    import { removeBackground, preload } from "https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.8/+esm";
+
+    // DOM refs
+    const fileInput       = document.getElementById("fileInput");
+    const btnClear        = document.getElementById("btnClear");
+    const btnRemove       = document.getElementById("btnRemove");
+    const btnDownload     = document.getElementById("btnDownload");
+    const btnPreload      = document.getElementById("btnPreload");
+    const topMessage      = document.getElementById("topMessage");
+    const topProgressWrap = document.getElementById("topProgressWrap");
+    const topProgress     = document.getElementById("topProgress");
+    const topReadyDot     = document.getElementById("topReadyDot");
+    const statusEl        = document.getElementById("status");
+    const overlayMsg      = document.getElementById("overlayMsg");
+    const progressText    = document.getElementById("progressText");
+    const brushSizeEl     = document.getElementById("brushSize");
+    const modeEraseBtn    = document.getElementById("modeErase");
+    const modeRestoreBtn  = document.getElementById("modeRestore");
+    const toastEl         = document.getElementById("toast");
+
+    // Main display canvas
+    const canvas   = document.getElementById("canvas");
+    const ctx      = canvas.getContext("2d");
+
+    // Offscreen originals and mask
+    const originalCanvas = document.createElement("canvas");
+    const originalCtx    = originalCanvas.getContext("2d");
+
+    const maskCanvas     = document.createElement("canvas");
+    const maskCtx        = maskCanvas.getContext("2d");
+
+    // State
+    const MODEL_READY_KEY = "bgoneModelReady";
+    let hasImage        = false;
+    let working         = false;
+    let brushMode       = "erase"; // "erase" or "restore"
+    let painting        = false;
+    let lastPointer     = null;
+
+    // History (mask snapshots)
+    const history = { stack: [], redos: [], limit: 30 };
+    function pushHistory() {
+      if (!hasImage) return;
+      try {
+        const snap = maskCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height);
+        history.stack.push(snap);
+        if (history.stack.length > history.limit) history.stack.shift();
+        history.redos.length = 0;
+      } catch (_e) {}
+    }
+    function undo() {
+      if (history.stack.length <= 1) return;
+      const current = maskCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height);
+      const prev = history.stack[history.stack.length - 2];
+      history.redos.push(current);
+      history.stack.pop();
+      maskCtx.putImageData(prev, 0, 0);
+      render();
+      setStatus("Undid last stroke.");
+    }
+    function redo() {
+      if (history.redos.length === 0) return;
+      const redoImg = history.redos.pop();
+      history.stack.push(redoImg);
+      maskCtx.putImageData(redoImg, 0, 0);
+      render();
+      setStatus("Redid stroke.");
+    }
+
+    // UI helpers
+    function setStatus(text) { statusEl.textContent = text; }
+    function setWorking(flag) {
+      working = flag;
+      btnRemove.disabled = flag || !hasImage;
+      fileInput.disabled = flag;
+      btnPreload.disabled = flag;
+    }
+    function setDownloadEnabled(flag) { btnDownload.disabled = !flag; }
+    function setTopProgress(pct) {
+      if (pct == null || isNaN(pct)) { topProgress.style.width = "0%"; return; }
+      const clamped = Math.max(0, Math.min(100, pct));
+      topProgress.style.width = clamped + "%";
+    }
+    function showModelReadyUI() {
+      btnPreload.style.display = "none";
+      topProgressWrap.style.display = "none";
+      topReadyDot.style.display = "block";
+      topReadyDot.classList.add("ready");
+      topMessage.textContent = "Model cached in this browser. BGone can now work offline.";
+      setTopProgress(0);
+    }
+    function showToast(msg, type = "info", ttl = 3500) {
+      toastEl.textContent = msg;
+      toastEl.classList.toggle("error", type === "error");
+      toastEl.style.display = "block";
+      setTimeout(() => { toastEl.style.display = "none"; }, ttl);
+    }
+
+    function checkModelReady() {
+      if (localStorage.getItem(MODEL_READY_KEY) === "1") showModelReadyUI();
+    }
+    function markModelReady() {
+      localStorage.setItem(MODEL_READY_KEY, "1");
+      showModelReadyUI();
+    }
+
+    // Fit dimensions preserving aspect ratio within bounds
+    function fitImageDimensions(imgWidth, imgHeight, maxWidth = 1400, maxHeight = 900) {
+      let w = imgWidth, h = imgHeight;
+      const ratio = Math.min(maxWidth / w, maxHeight / h, 1);
+      w = Math.round(w * ratio); h = Math.round(h * ratio);
+      return { w, h };
+    }
+
+    // Render pipeline: draw original, then apply mask via compositing
+    function render() {
+      if (!hasImage) return;
+      const w = canvas.width, h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+
+      // Draw original
+      ctx.globalCompositeOperation = "source-over";
+      ctx.drawImage(originalCanvas, 0, 0, w, h);
+
+      // Apply mask (destination-in keeps only the intersection)
+      ctx.globalCompositeOperation = "destination-in";
+      ctx.drawImage(maskCanvas, 0, 0, w, h);
+
+      // Reset comp op
+      ctx.globalCompositeOperation = "source-over";
+    }
+
+    // Initialize mask to fully opaque or to model output alpha
+    function initMaskFromImage(img) {
+      const w = canvas.width, h = canvas.height;
+      maskCanvas.width = w; maskCanvas.height = h;
+      // Start with fully opaque mask (white)
+      maskCtx.clearRect(0, 0, w, h);
+      maskCtx.fillStyle = "#fff";
+      maskCtx.fillRect(0, 0, w, h);
+      pushHistory();
+    }
+    function initMaskFromResultBlob(blob) {
+      return new Promise((resolve, reject) => {
+        const url = URL.createObjectURL(blob);
+        const resultImg = new Image();
+        resultImg.onload = () => {
+          URL.revokeObjectURL(url);
+          const { w, h } = { w: canvas.width, h: canvas.height };
+          // Draw result onto a temp canvas to read alpha
+          const temp = document.createElement("canvas");
+          temp.width = w; temp.height = h;
+          const tctx = temp.getContext("2d");
+          tctx.drawImage(resultImg, 0, 0, w, h);
+
+          const imgData = tctx.getImageData(0, 0, w, h);
+          const maskData = maskCtx.createImageData(w, h);
+          // Build mask from result alpha (255 = keep, 0 = remove)
+          const src = imgData.data, dst = maskData.data;
+          for (let i = 0; i < src.length; i += 4) {
+            const a = src[i + 3];
+            dst[i] = 255; dst[i + 1] = 255; dst[i + 2] = 255; dst[i + 3] = a;
+          }
+          maskCtx.putImageData(maskData, 0, 0);
+          pushHistory();
+          resolve();
+        };
+        resultImg.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Error rendering result.")); };
+        resultImg.src = url;
+      });
+    }
+
+    // Load file into originals and mask
+    async function loadFile(file) {
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+
+        const { w, h } = fitImageDimensions(img.width, img.height);
+        canvas.width = w; canvas.height = h;
+        originalCanvas.width = w; originalCanvas.height = h;
+
+        originalCtx.clearRect(0, 0, w, h);
+        originalCtx.drawImage(img, 0, 0, w, h);
+
+        hasImage = true;
+        setWorking(false);
+        setDownloadEnabled(true);
+        overlayMsg.style.display = "none";
+        setStatus(`Image loaded (${img.width} × ${img.height}).`);
+        progressText.textContent = "";
+
+        // Initialize mask fully opaque to allow manual erase before AI
+        initMaskFromImage(img);
+        render();
+      };
+      img.onerror = () => {
+        setStatus("Error loading image.");
+        showToast("Could not load that image. Try a different file.", "error");
+      };
+      img.src = url;
+    }
+
+    // Pointer utilities
+    function getCanvasPointer(evt) {
+      const rect = canvas.getBoundingClientRect();
+      const x = ((evt.clientX - rect.left) / rect.width) * canvas.width;
+      const y = ((evt.clientY - rect.top) / rect.height) * canvas.height;
+      return { x, y };
+    }
+
+    function drawStamp(x, y, radius) {
+      // We draw white circles on mask; erase uses destination-out to cut holes; restore uses source-over to add white.
+      maskCtx.save();
+      maskCtx.lineCap = "round";
+      maskCtx.lineJoin = "round";
+      maskCtx.fillStyle = "#fff";
+      maskCtx.strokeStyle = "#fff";
+
+      if (brushMode === "erase") {
+        maskCtx.globalCompositeOperation = "destination-out";
+      } else {
+        maskCtx.globalCompositeOperation = "source-over";
+      }
+
+      maskCtx.beginPath();
+      maskCtx.arc(x, y, radius, 0, Math.PI * 2);
+      maskCtx.fill();
+      maskCtx.restore();
+    }
+
+    function drawStroke(from, to, radius) {
+      // Draw along the path for smooth strokes
+      maskCtx.save();
+      maskCtx.lineCap = "round";
+      maskCtx.lineJoin = "round";
+      maskCtx.lineWidth = radius * 2;
+      maskCtx.strokeStyle = "#fff";
+      if (brushMode === "erase") {
+        maskCtx.globalCompositeOperation = "destination-out";
+      } else {
+        maskCtx.globalCompositeOperation = "source-over";
+      }
+      maskCtx.beginPath();
+      maskCtx.moveTo(from.x, from.y);
+      maskCtx.lineTo(to.x, to.y);
+      maskCtx.stroke();
+      maskCtx.restore();
+    }
+
+    function startPaint(evt) {
+      if (!hasImage || working) return;
+      painting = true;
+      canvas.setPointerCapture(evt.pointerId);
+      const p = getCanvasPointer(evt);
+      lastPointer = p;
+      const radius = parseInt(brushSizeEl.value, 10);
+      drawStamp(p.x, p.y, radius);
+      render();
+      evt.preventDefault();
+    }
+    function movePaint(evt) {
+      if (!painting) return;
+      const p = getCanvasPointer(evt);
+      const radius = parseInt(brushSizeEl.value, 10);
+      drawStroke(lastPointer, p, radius);
+      lastPointer = p;
+      render();
+      evt.preventDefault();
+    }
+    function endPaint(evt) {
+      if (!painting) return;
+      painting = false;
+      lastPointer = null;
+      pushHistory();
+      evt && evt.preventDefault();
+    }
+
+    // Download PNG of composited result
+    function downloadPNG() {
+      if (!hasImage) return;
+      const tmp = document.createElement("canvas");
+      tmp.width = canvas.width;
+      tmp.height = canvas.height;
+      const tctx = tmp.getContext("2d");
+      // Draw original then apply mask (same as render)
+      tctx.drawImage(originalCanvas, 0, 0, tmp.width, tmp.height);
+      tctx.globalCompositeOperation = "destination-in";
+      tctx.drawImage(maskCanvas, 0, 0, tmp.width, tmp.height);
+      tctx.globalCompositeOperation = "source-over";
+
+      tmp.toBlob(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "bgone.png";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }, "image/png");
+    }
+
+    // Events
+    fileInput.addEventListener("change", e => {
+      const file = e.target.files && e.target.files[0];
+      loadFile(file);
+    });
+
+    // Drag & drop
+    ["dragenter", "dragover"].forEach(name => {
+      canvas.addEventListener(name, e => {
+        e.preventDefault(); e.stopPropagation();
+        if (!hasImage) overlayMsg.textContent = "Drop image to load.";
+      });
+    });
+    ["dragleave", "drop"].forEach(name => {
+      canvas.addEventListener(name, e => {
+        e.preventDefault(); e.stopPropagation();
+        if (!hasImage) overlayMsg.textContent = "Drop an image here, or use “Choose image…”.";
+      });
+    });
+    canvas.addEventListener("drop", e => {
+      const file = e.dataTransfer.files && e.dataTransfer.files[0];
+      loadFile(file);
+    });
+
+    // Clear
+    btnClear.addEventListener("click", () => {
+      hasImage = false;
+      canvas.width = 0; canvas.height = 0;
+      originalCanvas.width = 0; originalCanvas.height = 0;
+      maskCanvas.width = 0; maskCanvas.height = 0;
+      overlayMsg.style.display = "block";
+      overlayMsg.textContent = "Drop an image here, or use “Choose image…”.";
+      setStatus("Cleared.");
+      progressText.textContent = "";
+      setDownloadEnabled(false);
+      history.stack.length = 0;
+      history.redos.length = 0;
+    });
+
+    // Preload model
+    btnPreload.addEventListener("click", async () => {
+      setWorking(true);
+      topMessage.textContent = "Downloading AI model… this is a one-time download in this browser.";
+      topProgressWrap.style.display = "block";
+      setTopProgress(5);
+      progressText.textContent = "Preloading AI model…";
+      try {
+        const config = {
+          debug: true,
+          progress: (key, current, total) => {
+            if (!total) return;
+            const pct = (current / total) * 100;
+            progressText.textContent = `Downloading ${key}: ${pct.toFixed(1)}%`;
+            setTopProgress(pct);
+          }
+        };
+        await preload(config);
+        markModelReady();
+        progressText.textContent = "";
+        setStatus("Model downloaded. Ready to remove backgrounds.");
+        showToast("Model downloaded. BGone works offline now.");
+      } catch (err) {
+        const msg = (err && (err.message || err.toString?.())) || "Unknown error";
+        topMessage.textContent = "Error downloading model: " + msg;
+        topProgressWrap.style.display = "none";
+        setTopProgress(0);
+        showToast("Model download failed. Please try again.", "error");
+      } finally {
+        setWorking(false);
+      }
+    });
+
+    // Auto remove background
+    btnRemove.addEventListener("click", async () => {
+      if (!hasImage || working) return;
+      setWorking(true);
+      setStatus("Removing background…");
+      progressText.textContent = "Preparing image…";
+
+      try {
+        const blob = await new Promise(resolve => originalCanvas.toBlob(resolve, "image/png"));
+        if (!blob) throw new Error("Canvas export returned null blob.");
+
+        const config = {
+          debug: true,
+          progress: (key, current, total) => {
+            if (!total) return;
+            const pct = (current / total) * 100;
+            progressText.textContent = `Downloading ${key}: ${pct.toFixed(1)}%`;
+          }
+        };
+
+        const outBlob = await removeBackground(blob, config);
+        progressText.textContent = "Applying mask…";
+
+        await initMaskFromResultBlob(outBlob);
+        render();
+        setStatus("Background removed. Use the brush to refine, then download PNG.");
+        progressText.textContent = "";
+        markModelReady(); // if this worked, model is available
+      } catch (err) {
+        const msg = (err && (err.message || err.toString?.())) || "Unknown error";
+        setStatus("Error removing background: " + msg);
+        progressText.textContent = "";
+        showToast("Background removal failed. Try re-downloading the model or another image.", "error");
+      } finally {
+        setWorking(false);
+      }
+    });
+
+    // Brush interactions via Pointer Events
+    canvas.addEventListener("pointerdown", startPaint, { passive: false });
+    canvas.addEventListener("pointermove", movePaint, { passive: false });
+    canvas.addEventListener("pointerup", endPaint, { passive: false });
+    canvas.addEventListener("pointercancel", endPaint, { passive: false });
+    canvas.addEventListener("pointerleave", endPaint, { passive: false });
+
+    // Mode toggles
+    function setBrushMode(mode) {
+      brushMode = mode;
+      const eraseActive = mode === "erase";
+      modeEraseBtn.classList.toggle("active", eraseActive);
+      modeRestoreBtn.classList.toggle("active", !eraseActive);
+      modeEraseBtn.setAttribute("aria-selected", eraseActive ? "true" : "false");
+      modeRestoreBtn.setAttribute("aria-selected", eraseActive ? "false" : "true");
+    }
+    modeEraseBtn.addEventListener("click", () => setBrushMode("erase"));
+    modeRestoreBtn.addEventListener("click", () => setBrushMode("restore"));
+
+    // Keyboard shortcuts
+    window.addEventListener("keydown", (e) => {
+      if (working) return;
+      switch (e.key.toLowerCase()) {
+        case "e": setBrushMode("erase"); setStatus("Brush: Erase"); break;
+        case "r": setBrushMode("restore"); setStatus("Brush: Restore"); break;
+        case "z": undo(); break;
+        case "y": redo(); break;
+        default: break;
+      }
+    });
+
+    // Download
+    btnDownload.addEventListener("click", downloadPNG);
+
+    // Initial
+    setStatus("Load an image to begin.");
+    setDownloadEnabled(false);
+    checkModelReady();
+  </script>
+</body>
+</html>
