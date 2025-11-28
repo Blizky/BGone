@@ -2,147 +2,174 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>BGone – Offline AI Background Remover</title>
+  <title>BGONE – Offline AI Background Remover</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
     :root {
-      /* Blizlab-ish palette */
-      --bg: #04060a;
-      --panel: #0c1019;
-      --panel-soft: #131827;
-      --accent: #0099cc;      /* blue */
+      --bg-main: #020509;
+      --bg-card: #050a12;
+      --bg-card-soft: #080f1c;
+      --border-subtle: rgba(255, 255, 255, 0.05);
+
+      --accent: #0099cc;      /* Blizlab blue */
       --accent-soft: rgba(0, 153, 204, 0.18);
       --accent-strong: #00c0ff;
-      --highlight: #ffcc33;   /* yellow */
+
+      --title: #ffcc33;       /* yellow */
       --text: #fdfdf9;
-      --muted: #a1a7c2;
+      --muted: #9ea4c5;
       --danger: #ff4f6a;
-      --border-soft: rgba(255, 255, 255, 0.05);
+
+      --checker-a: #181c27;
+      --checker-b: #10131f;
     }
 
     * { box-sizing: border-box; }
 
     body {
       margin: 0;
-      padding: 0;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background:
-        radial-gradient(circle at top, #171d30 0, #05060b 45%, #020309 100%);
+        radial-gradient(circle at top, #1b2437 0, #020509 45%, #000 100%);
       color: var(--text);
       display: flex;
       min-height: 100vh;
       align-items: center;
       justify-content: center;
+      padding: 0.75rem;
     }
 
-    .app {
-      width: min(1200px, 100vw - 1.5rem);
-      height: min(720px, 100vh - 1.5rem);
-      background: linear-gradient(145deg, #090c14, #020308);
-      border-radius: 20px;
+    .shell {
+      width: min(1180px, 100%);
+      background: radial-gradient(circle at top left, #121a2b 0, #050a12 55%, #020509 100%);
+      border-radius: 24px;
       box-shadow:
-        0 32px 70px rgba(0, 0, 0, 0.85),
+        0 38px 90px rgba(0, 0, 0, 0.9),
         0 0 0 1px rgba(255, 255, 255, 0.04);
-      display: grid;
-      grid-template-rows: auto 1fr;
+      display: flex;
+      flex-direction: column;
       overflow: hidden;
     }
 
-    header {
-      padding: 0.75rem 1rem;
-      background: rgba(0, 0, 0, 0.35);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    /* Top alert like Multi-Search bar */
+    .top-alert {
+      font-size: 0.78rem;
+      padding: 0.5rem 0.9rem;
+      background: linear-gradient(90deg, rgba(255, 204, 51, 0.08), rgba(0, 0, 0, 0.6));
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       display: flex;
       align-items: center;
+      gap: 0.75rem;
+    }
+
+    .top-alert span.label {
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 0.72rem;
+      color: var(--title);
+      font-weight: 700;
+      padding-right: 0.75rem;
+      border-right: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .top-alert span.message {
+      color: var(--muted);
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .top-alert .progress-bar {
+      width: 140px;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .top-alert .progress-inner {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-strong));
+      transition: width 0.15s linear;
+    }
+
+    header {
+      padding: 1rem 1.25rem 0.5rem;
+      display: flex;
+      align-items: flex-end;
       justify-content: space-between;
       gap: 1rem;
     }
 
-    .brand {
+    .title-block {
       display: flex;
-      align-items: baseline;
-      gap: 0.6rem;
-      flex-wrap: wrap;
+      flex-direction: column;
+      gap: 0.1rem;
     }
 
-    .brand-main {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-
-    .brand-dot {
-      width: 14px;
-      height: 14px;
-      border-radius: 4px;
-      background: linear-gradient(135deg, var(--highlight), var(--accent-strong));
-      box-shadow:
-        0 0 0 1px rgba(0, 0, 0, 0.5),
-        0 0 16px rgba(0, 192, 255, 0.7);
-    }
-
-    .brand-title {
+    .title-main {
+      font-size: 2rem;
       font-weight: 800;
-      font-size: 1.1rem;
-      letter-spacing: 0.15em;
+      letter-spacing: 0.18em;
+      color: var(--title);
       text-transform: uppercase;
-      color: var(--highlight);
     }
 
-    .brand-subtitle {
-      font-size: 0.8rem;
+    .title-sub {
+      font-size: 0.9rem;
       color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
     }
 
     .status-chip {
       font-size: 0.78rem;
       color: var(--muted);
-      padding: 0.25rem 0.7rem;
+      padding: 0.4rem 0.9rem;
       border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      background: rgba(5, 7, 16, 0.9);
-      max-width: 240px;
-      text-overflow: ellipsis;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      background: rgba(4, 8, 18, 0.9);
+      max-width: 260px;
       white-space: nowrap;
       overflow: hidden;
+      text-overflow: ellipsis;
       text-align: right;
     }
 
     main {
+      padding: 0.5rem 1.25rem 1.1rem;
       display: grid;
-      grid-template-columns: 260px 1fr;
+      grid-template-columns: 270px minmax(0, 1fr);
+      gap: 0.85rem;
       height: 100%;
     }
 
-    .sidebar {
-      background: rgba(2, 4, 9, 0.9);
-      border-right: 1px solid rgba(255, 255, 255, 0.04);
-      padding: 0.75rem;
+    .side {
       display: flex;
       flex-direction: column;
       gap: 0.75rem;
     }
 
-    .group {
-      background: var(--panel);
-      border-radius: 14px;
-      padding: 0.6rem 0.75rem 0.75rem;
-      border: 1px solid var(--border-soft);
+    .card {
+      background: var(--bg-card);
+      border-radius: 18px;
+      padding: 0.7rem 0.85rem 0.85rem;
+      border: 1px solid var(--border-subtle);
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6);
     }
 
-    .group h2 {
-      margin: 0 0 0.4rem;
-      font-size: 0.78rem;
+    .card h2 {
+      margin: 0 0 0.45rem;
+      font-size: 0.8rem;
+      letter-spacing: 0.14em;
       text-transform: uppercase;
-      letter-spacing: 0.12em;
       color: var(--muted);
     }
 
-    .group label {
-      font-size: 0.8rem;
+    .card label {
+      font-size: 0.82rem;
       color: var(--muted);
       display: block;
       margin-bottom: 0.25rem;
@@ -150,8 +177,8 @@
 
     .btn-row {
       display: flex;
-      gap: 0.4rem;
       flex-wrap: wrap;
+      gap: 0.4rem;
       margin-top: 0.2rem;
     }
 
@@ -163,12 +190,15 @@
       background: rgba(255, 255, 255, 0.02);
       color: var(--text);
       font-size: 0.8rem;
-      padding: 0.35rem 0.75rem;
+      padding: 0.38rem 0.9rem;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 0.35rem;
-      transition: background 0.15s ease, border-color 0.15s ease, transform 0.05s ease;
+      transition:
+        background 0.16s ease,
+        border-color 0.16s ease,
+        transform 0.05s ease;
       white-space: nowrap;
     }
 
@@ -185,23 +215,23 @@
 
     button.primary {
       background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      color: #010307;
       border-color: transparent;
-      color: #020308;
       font-weight: 600;
     }
 
     button.primary[disabled] {
-      opacity: 0.4;
+      opacity: 0.45;
       cursor: default;
     }
 
     button.danger {
-      border-color: rgba(255, 79, 106, 0.65);
       color: var(--danger);
+      border-color: rgba(255, 79, 106, 0.7);
     }
 
     button.small {
-      padding-inline: 0.6rem;
+      padding-inline: 0.65rem;
       font-size: 0.76rem;
     }
 
@@ -216,10 +246,9 @@
     .pill-toggle {
       display: flex;
       border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.14);
       overflow: hidden;
-      margin-top: 0.45rem;
-      width: 100%;
+      margin-top: 0.5rem;
     }
 
     .pill-toggle button {
@@ -227,8 +256,8 @@
       border: none;
       flex: 1;
       justify-content: center;
-      padding-inline: 0.2rem;
-      font-size: 0.76rem;
+      padding-inline: 0.4rem;
+      font-size: 0.78rem;
     }
 
     .pill-toggle button.active {
@@ -240,24 +269,28 @@
       font-size: 0.72rem;
       color: var(--muted);
       margin-top: 0.35rem;
-      line-height: 1.4;
+      line-height: 1.45;
     }
 
-    .progress {
+    .progress-text {
       font-size: 0.72rem;
-      margin-top: 0.3rem;
       color: var(--muted);
+      margin-top: 0.25rem;
       min-height: 1em;
     }
 
     .canvas-wrap {
-      position: relative;
       background:
-        repeating-conic-gradient(#181a25 0% 25%, #10111a 0% 50%) 50% / 18px 18px;
+        repeating-conic-gradient(var(--checker-a) 0% 25%, var(--checker-b) 0% 50%) 50% / 20px 20px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.8);
+      position: relative;
+      overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
-      overflow: hidden;
     }
 
     canvas {
@@ -265,10 +298,8 @@
       max-height: 100%;
       background: transparent;
       image-rendering: auto;
-      box-shadow:
-        0 0 0 1px rgba(0, 0, 0, 0.6),
-        0 18px 40px rgba(0, 0, 0, 0.9);
       border-radius: 8px;
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.7);
     }
 
     .overlay-msg {
@@ -276,58 +307,84 @@
       bottom: 0.75rem;
       left: 50%;
       transform: translateX(-50%);
-      font-size: 0.78rem;
-      padding: 0.3rem 0.7rem;
+      padding: 0.35rem 0.9rem;
       border-radius: 999px;
-      background: rgba(1, 3, 10, 0.85);
+      background: rgba(5, 8, 17, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 0.78rem;
       color: var(--muted);
       pointer-events: none;
       max-width: 90%;
       text-align: center;
-      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    footer {
+      padding: 0.2rem 1.3rem 0.75rem;
+      font-size: 0.72rem;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 0.5rem;
+      opacity: 0.8;
+    }
+
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
     }
 
     @media (max-width: 900px) {
-      .app {
+      .shell {
         height: auto;
-        grid-template-rows: auto auto 1fr;
+      }
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .status-chip {
+        max-width: 100%;
+        text-align: left;
       }
       main {
         grid-template-columns: 1fr;
-        grid-template-rows: auto 1fr;
+        grid-template-rows: auto auto;
+        height: auto;
       }
-      .sidebar {
-        flex-direction: row;
-        flex-wrap: wrap;
-        max-height: 260px;
-        overflow-y: auto;
-      }
-      .group {
-        min-width: 230px;
-      }
-      .status-chip {
-        max-width: 180px;
+      .canvas-wrap {
+        min-height: 260px;
       }
     }
   </style>
 </head>
 <body>
-  <div class="app">
-    <header>
-      <div class="brand">
-        <div class="brand-main">
-          <span class="brand-dot"></span>
-          <span class="brand-title">BGone</span>
-        </div>
-        <span class="brand-subtitle">Offline AI Background Remover</span>
+  <div class="shell">
+    <!-- Top alert / model info -->
+    <div class="top-alert">
+      <span class="label">Note</span>
+      <span class="message" id="topMessage">
+        First time you use BGONE, it downloads an AI model in your browser. Progress will show here.
+      </span>
+      <div class="progress-bar">
+        <div class="progress-inner" id="topProgress"></div>
       </div>
-      <div class="status-chip" id="status">Load an image to begin</div>
+    </div>
+
+    <header>
+      <div class="title-block">
+        <div class="title-main">BGONE</div>
+        <div class="title-sub">Offline AI background remover with manual brush refinement.</div>
+      </div>
+      <div class="status-chip" id="status">Load an image to begin.</div>
     </header>
 
     <main>
-      <aside class="sidebar">
-        <!-- IMAGE -->
-        <div class="group">
+      <aside class="side">
+        <!-- IMAGE CARD -->
+        <div class="card">
           <h2>Image</h2>
           <label>Load source</label>
           <div class="btn-row">
@@ -338,14 +395,14 @@
           <div class="btn-row" style="margin-top:0.5rem;">
             <button id="btnRemove" class="primary">Auto remove background</button>
           </div>
-          <div class="btn-row" style="margin-top:0.25rem;">
+          <div class="btn-row" style="margin-top:0.3rem;">
             <button id="btnDownload" class="small" disabled>Download PNG</button>
           </div>
-          <div id="progress" class="progress"></div>
+          <div id="progressText" class="progress-text"></div>
         </div>
 
-        <!-- BRUSH -->
-        <div class="group">
+        <!-- BRUSH CARD -->
+        <div class="card">
           <h2>Brush</h2>
           <label for="brushSize">Brush size</label>
           <input id="brushSize" type="range" min="5" max="80" value="25" />
@@ -354,18 +411,19 @@
             <button id="modeRestore" data-mode="restore">Restore</button>
           </div>
           <div class="hint">
-            Paint directly on the image after removal:
-            erase to hide pixels, restore to bring original pixels back.
+            After auto-removal, paint directly on the image:<br>
+            • <strong>Erase</strong> hides pixels (more transparency).<br>
+            • <strong>Restore</strong> brings back the original pixels.
           </div>
         </div>
 
-        <!-- HELP -->
-        <div class="group">
-          <h2>Notes</h2>
+        <!-- INFO CARD -->
+        <div class="card">
+          <h2>Info</h2>
           <div class="hint">
-            • All processing runs in your browser; images are never uploaded.<br />
-            • First run may be slower while the AI model downloads.<br />
-            • Checkerboard means transparency in the exported PNG.
+            • Everything runs in your browser; images are never uploaded.<br>
+            • First run loads the AI model (once). Later runs are much faster.<br>
+            • Checkerboard = transparent areas in the exported PNG.
           </div>
         </div>
       </aside>
@@ -373,52 +431,67 @@
       <section class="canvas-wrap">
         <canvas id="canvas"></canvas>
         <div class="overlay-msg" id="overlayMsg">
-          Drop an image here or use “Choose image…”
+          Drop an image here, or use “Choose image…” on the left.
         </div>
       </section>
     </main>
+
+    <footer>
+      <div>BGONE – local AI cutouts for photos, thumbnails and mockups.</div>
+      <div>Made by Alex Blizky – see also <a href="https://blizky.github.io/multisearch/" target="_blank" rel="noreferrer">Multi-Search</a>.</div>
+    </footer>
   </div>
 
-  <!-- SCRIPT -->
   <script type="module">
-    import imglyRemoveBackground from "https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/+esm";
-    import * as ort from "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.21.0/dist/ort.min.js";
+    import imglyRemoveBackground from "https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.8/+esm";
 
-    // Basic state
-    const fileInput    = document.getElementById("fileInput");
-    const btnClear     = document.getElementById("btnClear");
-    const btnRemove    = document.getElementById("btnRemove");
-    const btnDownload  = document.getElementById("btnDownload");
-    const statusEl     = document.getElementById("status");
-    const progressEl   = document.getElementById("progress");
-    const overlayMsg   = document.getElementById("overlayMsg");
-    const brushSizeEl  = document.getElementById("brushSize");
-    const modeEraseBtn   = document.getElementById("modeErase");
-    const modeRestoreBtn = document.getElementById("modeRestore");
+    // DOM refs
+    const fileInput     = document.getElementById("fileInput");
+    const btnClear      = document.getElementById("btnClear");
+    const btnRemove     = document.getElementById("btnRemove");
+    const btnDownload   = document.getElementById("btnDownload");
+    const statusEl      = document.getElementById("status");
+    const overlayMsg    = document.getElementById("overlayMsg");
+    const progressText  = document.getElementById("progressText");
+    const topMessage    = document.getElementById("topMessage");
+    const topProgress   = document.getElementById("topProgress");
+    const brushSizeEl   = document.getElementById("brushSize");
+    const modeEraseBtn  = document.getElementById("modeErase");
+    const modeRestoreBtn= document.getElementById("modeRestore");
 
     const canvas   = document.getElementById("canvas");
     const ctx      = canvas.getContext("2d");
-    const hidden   = document.createElement("canvas");  // original pixels
-    const hiddenCtx = hidden.getContext("2d");
+    const hidden   = document.createElement("canvas");
+    const hiddenCtx= hidden.getContext("2d");
 
     let hasImage          = false;
     let working           = false;
-    let brushMode         = "erase"; // "erase" | "restore"
-    let resultImageData   = null;    // editable
-    let originalImageData = null;    // reference
     let painting          = false;
+    let brushMode         = "erase";
+    let resultImageData   = null;
+    let originalImageData = null;
 
-    // Helpers
     function setStatus(text) {
       statusEl.textContent = text;
     }
-    function setProgress(text) {
-      progressEl.textContent = text || "";
-    }
+
     function setWorking(flag) {
       working = flag;
       btnRemove.disabled = flag || !hasImage;
       fileInput.disabled = flag;
+    }
+
+    function setDownloadEnabled(flag) {
+      btnDownload.disabled = !flag;
+    }
+
+    function setTopProgress(pct) {
+      if (pct == null || isNaN(pct)) {
+        topProgress.style.width = "0%";
+        return;
+      }
+      const clamped = Math.max(0, Math.min(100, pct));
+      topProgress.style.width = clamped + "%";
     }
 
     function fitImageDimensions(imgWidth, imgHeight, maxWidth = 1400, maxHeight = 900) {
@@ -469,7 +542,7 @@
           if (dx * dx + dy * dy <= r2) {
             const idx = (j * w + i) * 4;
             if (mode === "erase") {
-              data[idx + 3] = 0; // alpha
+              data[idx + 3] = 0; // alpha → transparent
             } else {
               data[idx    ] = orig[idx    ];
               data[idx + 1] = orig[idx + 1];
@@ -482,14 +555,13 @@
       redrawFromResult();
     }
 
-    // Load file
+    // Image loading
     async function loadFile(file) {
       if (!file) return;
       const url = URL.createObjectURL(file);
       const img = new Image();
       img.onload = () => {
         URL.revokeObjectURL(url);
-
         const { w, h } = fitImageDimensions(img.width, img.height);
         canvas.width = w;
         canvas.height = h;
@@ -503,45 +575,45 @@
 
         originalImageData = hiddenCtx.getImageData(0, 0, w, h);
         syncImageData();
-
         hasImage = true;
-        btnRemove.disabled = false;
-        btnDownload.disabled = false;
+        setWorking(false);
+        setDownloadEnabled(true);
         overlayMsg.style.display = "none";
-        setStatus(`Image loaded (${img.width} × ${img.height})`);
-        setProgress("");
+        setStatus(`Image loaded (${img.width} × ${img.height}).`);
+        progressText.textContent = "";
+        setTopProgress(0);
       };
       img.onerror = () => {
-        setStatus("Error loading image");
+        setStatus("Error loading image.");
       };
       img.src = url;
     }
 
-    fileInput.addEventListener("change", (e) => {
+    fileInput.addEventListener("change", e => {
       const file = e.target.files && e.target.files[0];
       loadFile(file);
     });
 
-    // Drag & drop
-    ["dragenter", "dragover"].forEach(ev => {
-      canvas.addEventListener(ev, (e) => {
+    // Drag and drop
+    ["dragenter", "dragover"].forEach(name => {
+      canvas.addEventListener(name, e => {
         e.preventDefault();
         e.stopPropagation();
-        if (!hasImage) overlayMsg.textContent = "Drop image to load";
+        if (!hasImage) overlayMsg.textContent = "Drop image to load.";
       });
     });
 
-    ["dragleave", "drop"].forEach(ev => {
-      canvas.addEventListener(ev, (e) => {
+    ["dragleave", "drop"].forEach(name => {
+      canvas.addEventListener(name, e => {
         e.preventDefault();
         e.stopPropagation();
         if (!hasImage) {
-          overlayMsg.textContent = "Drop an image here or use “Choose image…”";
+          overlayMsg.textContent = "Drop an image here, or use “Choose image…”.";
         }
       });
     });
 
-    canvas.addEventListener("drop", (e) => {
+    canvas.addEventListener("drop", e => {
       const file = e.dataTransfer.files && e.dataTransfer.files[0];
       loadFile(file);
     });
@@ -555,39 +627,41 @@
       hidden.height = 0;
       originalImageData = null;
       resultImageData = null;
-      btnRemove.disabled = true;
-      btnDownload.disabled = true;
       overlayMsg.style.display = "block";
-      overlayMsg.textContent = "Drop an image here or use “Choose image…”";
-      setStatus("Cleared");
-      setProgress("");
+      overlayMsg.textContent = "Drop an image here, or use “Choose image…”.";
+      setStatus("Cleared.");
+      progressText.textContent = "";
+      setTopProgress(0);
+      setDownloadEnabled(false);
     });
 
-    // Auto background removal
+    // Auto remove background
     btnRemove.addEventListener("click", async () => {
       if (!hasImage || working) return;
       setWorking(true);
-      setStatus("Removing background… First run downloads the AI model.");
-      setProgress("");
+      setStatus("Removing background… model may download on first run.");
+      topMessage.textContent = "Downloading and running the model locally. This happens only once per browser.";
+      progressText.textContent = "Preparing image…";
+      setTopProgress(5);
 
       try {
-        const blob = await new Promise((resolve) =>
+        const blob = await new Promise(resolve =>
           canvas.toBlob(resolve, "image/png")
         );
 
         const config = {
           debug: true,
-          device: "cpu",
-          model: "isnet_quint8",
           progress: (key, current, total) => {
             if (!total) return;
-            const pct = ((current / total) * 100).toFixed(1);
-            setProgress(`Downloading ${key}: ${pct}%`);
+            const pct = (current / total) * 100;
+            progressText.textContent = `Downloading ${key}: ${pct.toFixed(1)}%`;
+            setTopProgress(pct);
           }
         };
 
         const outBlob = await imglyRemoveBackground(blob, config);
-        setProgress("Compositing result…");
+        progressText.textContent = "Compositing result…";
+        setTopProgress(100);
 
         const url = URL.createObjectURL(outBlob);
         const resultImg = new Image();
@@ -595,26 +669,30 @@
           URL.revokeObjectURL(url);
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           ctx.drawImage(resultImg, 0, 0, canvas.width, canvas.height);
-          syncImageData(); // now resultImageData holds transparent cut-out
-          setStatus("Background removed. Use the brush to refine.");
-          setProgress("");
+          syncImageData();
+          setStatus("Background removed. Use the brush to refine, then download PNG.");
+          progressText.textContent = "";
+          setTopProgress(0);
           setWorking(false);
         };
         resultImg.onerror = () => {
-          setStatus("Error rendering result");
-          setProgress("");
+          setStatus("Error rendering result.");
+          progressText.textContent = "";
           setWorking(false);
+          setTopProgress(0);
         };
         resultImg.src = url;
       } catch (err) {
         console.error(err);
-        setStatus("Error removing background");
-        setProgress("");
+        const msg = (err && (err.message || err.toString?.())) || "Unknown error";
+        setStatus("Error removing background: " + msg);
+        progressText.textContent = "";
         setWorking(false);
+        setTopProgress(0);
       }
     });
 
-    // Brush interaction
+    // Brush interactions
     function startPaint(evt) {
       if (!hasImage || working || !resultImageData) return;
       painting = true;
@@ -671,7 +749,7 @@
       tmp.height = h;
       tctx.putImageData(resultImageData, 0, 0);
 
-      tmp.toBlob((blob) => {
+      tmp.toBlob(blob => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
@@ -683,8 +761,9 @@
       }, "image/png");
     });
 
-    // Initial status
-    setStatus("Load an image to begin");
+    // Initial
+    setStatus("Load an image to begin.");
+    setDownloadEnabled(false);
   </script>
 </body>
 </html>
