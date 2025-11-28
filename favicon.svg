@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Blue rounded background -->
+  <rect width="64" height="64" rx="14" ry="14" fill="#0099CC" />
+
+  <!-- Eraser (yellow), slightly rotated -->
+  <g transform="translate(18,18) rotate(-28 14 14)">
+    <!-- Main eraser body -->
+    <rect x="2" y="6" width="28" height="18" rx="4" ry="4" fill="#FFCC33" />
+
+    <!-- Darker bottom strip (like used edge) -->
+    <rect x="2" y="16" width="28" height="6" fill="#D9A61F" opacity="0.75" />
+
+    <!-- Subtle shadow on the right side -->
+    <rect x="18" y="6" width="12" height="18" fill="#000000" opacity="0.18" />
+  </g>
+</svg>
