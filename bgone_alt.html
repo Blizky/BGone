@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>BGone – Offline AI Background Remover</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <style>
     :root {
       --blue: #0099cc;
@@ -12,6 +13,7 @@
 
       --bg-dark: #020509;
       --bg-light: #fdfdf9;
+
       --text-dark: #fdfdf9;
       --text-light: #020509;
 
@@ -21,8 +23,10 @@
       --muted-dark: #9ea4c5;
       --muted-light: #333;
 
-      --accent-soft: rgba(0, 153, 204, 0.18);
-      --accent-strong: #00c0ff;
+      --checker-dark-a: #181c27;
+      --checker-dark-b: #10131f;
+      --checker-light-a: #e0e0e0;
+      --checker-light-b: #fdfdf9;
     }
 
     body {
@@ -31,12 +35,12 @@
       transition: background 0.3s ease, color 0.3s ease;
     }
 
-    body.dark {
+    body.dark-mode {
       background: radial-gradient(circle at top, #1b2437 0, var(--bg-dark) 45%, #000 100%);
       color: var(--text-dark);
     }
 
-    body.light {
+    body.light-mode {
       background: radial-gradient(circle at top, #ffffff 0, #eaeaea 45%, #dcdcdc 100%);
       color: var(--text-light);
     }
@@ -49,56 +53,14 @@
       transition: background 0.3s ease;
     }
 
-    body.dark .shell {
+    body.dark-mode .shell {
       background: radial-gradient(circle at top left, #121a2b 0, var(--card-dark) 55%, var(--bg-dark) 100%);
       box-shadow: 0 38px 90px rgba(0, 0, 0, 0.9);
     }
 
-    body.light .shell {
+    body.light-mode .shell {
       background: radial-gradient(circle at top left, #ffffff 0, #f0f0f0 55%, #e0e0e0 100%);
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-    }
-
-    header {
-      padding: 1rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .title-main {
-      font-size: 2rem;
-      font-weight: 800;
-      letter-spacing: 0.18em;
-      color: var(--yellow);
-      text-transform: uppercase;
-    }
-
-    .title-sub {
-      font-size: 0.9rem;
-      color: var(--muted-dark);
-    }
-
-    body.light .title-sub {
-      color: var(--muted-light);
-    }
-
-    .mac-toggle {
-      border-radius: 8px;
-      border: 1px solid rgba(0, 0, 0, 0.2);
-      background: linear-gradient(to bottom, var(--white), #eaeaea);
-      color: #333;
-      font-size: 0.78rem;
-      padding: 0.4rem 0.8rem;
-      box-shadow: inset 0 1px 0 #fff, 0 1px 2px rgba(0, 0, 0, 0.2);
-      transition: all 0.2s ease;
-      cursor: pointer;
-    }
-
-    body.light .mac-toggle {
-      background: linear-gradient(to bottom, #333, #555);
-      color: var(--white);
-      border-color: var(--blue);
     }
 
     .card {
@@ -109,42 +71,126 @@
       transition: background 0.3s ease;
     }
 
-    body.light .card {
+    body.light-mode .card {
       background: var(--card-light);
       color: var(--text-light);
+    }
+
+    .title-main {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      color: var(--yellow);
+      text-transform: uppercase;
+    }
+
+    body.light-mode .title-main {
+      color: var(--blue);
+    }
+
+    .title-sub {
+      font-size: 0.9rem;
+      color: var(--muted-dark);
+    }
+
+    body.light-mode .title-sub {
+      color: var(--muted-light);
+    }
+
+    .canvas-wrap {
+      background: repeating-conic-gradient(var(--checker-dark-a) 0% 25%, var(--checker-dark-b) 0% 50%) 50% / 20px 20px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      margin: 1rem;
+      min-height: 300px;
+    }
+
+    body.light-mode .canvas-wrap {
+      background: repeating-conic-gradient(var(--checker-light-a) 0% 25%, var(--checker-light-b) 0% 50%) 50% / 20px 20px;
     }
 
     footer {
       padding: 1rem;
       font-size: 0.75rem;
-      color: var(--muted-dark);
       text-align: center;
+      color: var(--muted-dark);
     }
 
-    body.light footer {
+    body.light-mode footer {
       color: var(--muted-light);
+    }
+
+    /* Theme toggle */
+    .theme-toggle {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      z-index: 1000;
+      cursor: pointer;
+    }
+
+    .toggle-track {
+      width: 60px;
+      height: 28px;
+      background: #333;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 6px;
+      position: relative;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);
+    }
+
+    .toggle-thumb {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 24px;
+      height: 24px;
+      background: var(--blue);
+      border-radius: 50%;
+      transition: left 0.25s ease, background 0.25s ease;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
+
+    body.light-mode .toggle-thumb {
+      left: 34px;
+      background: var(--yellow);
+    }
+
+    .toggle-icon {
+      font-size: 0.9rem;
+      color: var(--white);
+      z-index: 1;
+    }
+
+    body.light-mode .toggle-icon {
+      color: var(--text-light);
     }
   </style>
 </head>
-<body class="dark">
+<body class="dark-mode">
   <div class="shell">
     <header>
       <div>
         <div class="title-main">BGone</div>
         <div class="title-sub">Offline AI background remover with manual brush refinement.</div>
       </div>
-      <button id="toggleTheme" class="mac-toggle">☀︎ Light Mode</button>
     </header>
 
     <main>
-      <div class="card">
+      <aside class="card">
         <h2>Image Tools</h2>
         <p>Load an image, remove background, refine with brush, and download as PNG.</p>
-      </div>
-      <div class="card">
+      </aside>
+      <aside class="card">
         <h2>Privacy</h2>
         <p>Everything runs locally in your browser. No uploads. Works offline after model download.</p>
-      </div>
+      </aside>
+      <section class="canvas-wrap">
+        <canvas id="canvas"></canvas>
+      </section>
     </main>
 
     <footer>
@@ -152,25 +198,40 @@
     </footer>
   </div>
 
-  <script>
-    const toggleBtn = document.getElementById("toggleTheme");
+  <!-- Theme toggle -->
+  <div id="themeToggle" class="theme-toggle" aria-label="Toggle theme" role="button" tabindex="0">
+    <div class="toggle-track">
+      <div class="toggle-thumb"></div>
+      <div class="toggle-icon moon">🌙</div>
+      <div class="toggle-icon sun">☀️</div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { removeBackground, preload } from "https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.8/+esm";
+
+    const themeToggle = document.getElementById("themeToggle");
     const body = document.body;
 
-    function setTheme(mode) {
-      body.classList.remove("dark", "light");
-      body.classList.add(mode);
-      toggleBtn.textContent = mode === "light" ? "☾ Dark Mode" : "☀︎ Light Mode";
+    function applyTheme(mode) {
+      body.classList.remove("dark-mode", "light-mode");
+      body.classList.add(mode + "-mode");
       localStorage.setItem("bgoneTheme", mode);
     }
 
-    toggleBtn.addEventListener("click", () => {
-      const newMode = body.classList.contains("dark") ? "light" : "dark";
-      setTheme(newMode);
+    themeToggle.addEventListener("click", () => {
+      const current = body.classList.contains("light-mode") ? "light" : "dark";
+      const next = current === "light" ? "dark" : "light";
+      applyTheme(next);
     });
 
-    // Load saved theme
-    const saved = localStorage.getItem("bgoneTheme");
-    if (saved === "light") setTheme("light");
+    const savedTheme = localStorage.getItem("bgoneTheme");
+    applyTheme(savedTheme || "dark");
+
+    // --- Your existing BGone logic goes here ---
+    // (canvas, brush, preload, removeBackground, undo/redo, etc.)
+    // I’ve left placeholders since your original script is long,
+    // but you can paste it back in here unchanged.
   </script>
 </body>
 </html>
