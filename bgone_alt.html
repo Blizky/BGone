@@ -27,7 +27,14 @@
       --checker-dark-b: #10131f;
       --checker-light-a: #e0e0e0;
       --checker-light-b: #fdfdf9;
+
+      --chip-bg-dark: rgba(255,255,255,0.08);
+      --chip-bg-light: rgba(0,0,0,0.06);
+      --chip-fg-dark: #eaeaf6;
+      --chip-fg-light: #222;
     }
+
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -47,10 +54,10 @@
 
     .shell {
       max-width: 1180px;
-      margin: auto;
+      margin: 24px auto;
       border-radius: 24px;
       overflow: hidden;
-      transition: background 0.3s ease;
+      transition: background 0.3s ease, box-shadow 0.3s ease;
     }
 
     body.dark-mode .shell {
@@ -63,17 +70,11 @@
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
     }
 
-    .card {
-      background: var(--card-dark);
-      border-radius: 18px;
-      padding: 1rem;
-      margin: 1rem;
-      transition: background 0.3s ease;
-    }
-
-    body.light-mode .card {
-      background: var(--card-light);
-      color: var(--text-light);
+    header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      padding: 20px 24px 8px 24px;
     }
 
     .title-main {
@@ -97,20 +98,136 @@
       color: var(--muted-light);
     }
 
+    .cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 0 12px 12px 12px;
+    }
+
+    .card {
+      background: var(--card-dark);
+      border-radius: 16px;
+      padding: 12px;
+      transition: background 0.3s ease, color 0.3s ease, border 0.3s ease;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    body.light-mode .card {
+      background: var(--card-light);
+      color: var(--text-light);
+      border: 1px solid rgba(0,0,0,0.06);
+    }
+
+    .card h2 {
+      margin: 6px 0 8px 0;
+      font-size: 1.05rem;
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    label {
+      font-size: 0.85rem;
+      opacity: 0.85;
+    }
+
+    input[type="file"],
+    input[type="range"],
+    button,
+    select {
+      font-size: 0.95rem;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      color: var(--text-dark);
+      transition: background 0.2s ease, border 0.2s ease, color 0.2s ease;
+    }
+
+    body.light-mode input[type="file"],
+    body.light-mode input[type="range"],
+    body.light-mode button,
+    body.light-mode select {
+      border: 1px solid rgba(0,0,0,0.12);
+      background: rgba(0,0,0,0.06);
+      color: var(--text-light);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      background: var(--chip-bg-dark);
+      color: var(--chip-fg-dark);
+    }
+    body.light-mode .chip {
+      background: var(--chip-bg-light);
+      color: var(--chip-fg-light);
+    }
+
     .canvas-wrap {
       background: repeating-conic-gradient(var(--checker-dark-a) 0% 25%, var(--checker-dark-b) 0% 50%) 50% / 20px 20px;
       border-radius: 20px;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      margin: 1rem;
-      min-height: 300px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      margin: 12px;
+      min-height: 380px;
+      position: relative;
+      overflow: hidden;
     }
 
     body.light-mode .canvas-wrap {
       background: repeating-conic-gradient(var(--checker-light-a) 0% 25%, var(--checker-light-b) 0% 50%) 50% / 20px 20px;
+      border: 1px solid rgba(0,0,0,0.08);
+    }
+
+    canvas {
+      display: block;
+      margin: 0 auto;
+      max-width: 100%;
+      height: auto;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      pointer-events: none;
+      padding: 16px;
+    }
+
+    .overlay .msg {
+      background: rgba(0,0,0,0.35);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.15);
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      max-width: 520px;
+    }
+
+    body.light-mode .overlay .msg {
+      background: rgba(255,255,255,0.7);
+      color: #000;
+      border: 1px solid rgba(0,0,0,0.15);
     }
 
     footer {
-      padding: 1rem;
+      padding: 10px 16px 20px 16px;
       font-size: 0.75rem;
       text-align: center;
       color: var(--muted-dark);
@@ -168,6 +285,30 @@
     body.light-mode .toggle-icon {
       color: var(--text-light);
     }
+
+    /* Toolbar row for actions */
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      padding: 0 12px 12px 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .kbd {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      padding: 1px 6px;
+      border-radius: 6px;
+      background: var(--chip-bg-dark);
+      color: var(--chip-fg-dark);
+      border: 1px solid rgba(255,255,255,0.12);
+      font-size: 0.8rem;
+    }
+    body.light-mode .kbd {
+      background: var(--chip-bg-light);
+      color: var(--chip-fg-light);
+      border: 1px solid rgba(0,0,0,0.12);
+    }
   </style>
 </head>
 <body class="dark-mode">
@@ -177,24 +318,57 @@
         <div class="title-main">BGone</div>
         <div class="title-sub">Offline AI background remover with manual brush refinement.</div>
       </div>
+      <div class="chip">Local only • No uploads</div>
     </header>
 
-    <main>
+    <div class="cards">
       <aside class="card">
-        <h2>Image Tools</h2>
-        <p>Load an image, remove background, refine with brush, and download as PNG.</p>
+        <h2>Image tools</h2>
+        <div class="row">
+          <label for="fileInput">Load source</label>
+          <input id="fileInput" type="file" accept="image/*" />
+          <button id="btnRemove" disabled>Auto remove</button>
+          <button id="btnDownload" disabled>Download PNG</button>
+        </div>
+        <div class="row">
+          <span class="chip">Drag & drop supported</span>
+          <span class="chip">Undo <span class="kbd">⌘Z</span> • Redo <span class="kbd">⇧⌘Z</span></span>
+        </div>
       </aside>
+
       <aside class="card">
-        <h2>Privacy</h2>
-        <p>Everything runs locally in your browser. No uploads. Works offline after model download.</p>
+        <h2>Brush</h2>
+        <div class="row">
+          <label for="brushSize">Size</label>
+          <input id="brushSize" type="range" min="5" max="160" value="36" />
+          <button id="modeErase" disabled>Erase</button>
+          <button id="modeRestore" disabled>Restore</button>
+          <span class="chip">Hold <span class="kbd">Option</span> to toggle</span>
+        </div>
       </aside>
-      <section class="canvas-wrap">
-        <canvas id="canvas"></canvas>
-      </section>
-    </main>
+    </div>
+
+    <section class="canvas-wrap" id="canvasWrap">
+      <canvas id="canvas"></canvas>
+      <div class="overlay" id="overlay">
+        <div class="msg" id="overlayMsg">Load an image to begin. You can drag & drop or use the file picker.</div>
+      </div>
+    </section>
+
+    <div class="toolbar">
+      <button id="btnFit" disabled>Fit to view</button>
+      <button id="btnCenter" disabled>Center</button>
+      <select id="checkerSize">
+        <option value="20">Checker 20px</option>
+        <option value="16">Checker 16px</option>
+        <option value="24">Checker 24px</option>
+        <option value="32">Checker 32px</option>
+      </select>
+      <span class="chip">Model loads once • Works offline</span>
+    </div>
 
     <footer>
-      BGone – local AI cutouts for photos, thumbnails and mockups. Made by Alex Blizky.
+      BGone — local AI cutouts for photos, thumbnails and mockups. Made by Alex Blizky.
     </footer>
   </div>
 
@@ -210,6 +384,7 @@
   <script type="module">
     import { removeBackground, preload } from "https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.8/+esm";
 
+    // --- Theme toggle ---
     const themeToggle = document.getElementById("themeToggle");
     const body = document.body;
 
@@ -228,461 +403,333 @@
     const savedTheme = localStorage.getItem("bgoneTheme");
     applyTheme(savedTheme || "dark");
 
-  <script type="module">
-    import { removeBackground, preload } from "https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.8/+esm";
+    // --- Elements ---
+    const fileInput = document.getElementById("fileInput");
+    const btnRemove = document.getElementById("btnRemove");
+    const btnDownload = document.getElementById("btnDownload");
+    const brushSizeEl = document.getElementById("brushSize");
+    const modeEraseBtn = document.getElementById("modeErase");
+    const modeRestoreBtn = document.getElementById("modeRestore");
+    const btnFit = document.getElementById("btnFit");
+    const btnCenter = document.getElementById("btnCenter");
+    const checkerSize = document.getElementById("checkerSize");
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const overlay = document.getElementById("overlay");
+    const overlayMsg = document.getElementById("overlayMsg");
+    const canvasWrap = document.getElementById("canvasWrap");
 
-    // DOM refs
-    const fileInput       = document.getElementById("fileInput");
-    const btnClear        = document.getElementById("btnClear");
-    const btnRemove       = document.getElementById("btnRemove");
-    const btnDownload     = document.getElementById("btnDownload");
-    const btnPreload      = document.getElementById("btnPreload");
-    const topMessage      = document.getElementById("topMessage");
-    const topProgressWrap = document.getElementById("topProgressWrap");
-    const topProgress     = document.getElementById("topProgress");
-    const topReadyDot     = document.getElementById("topReadyDot");
-    const statusEl        = document.getElementById("status");
-    const overlayMsg      = document.getElementById("overlayMsg");
-    const progressText    = document.getElementById("progressText");
-    const brushSizeEl     = document.getElementById("brushSize");
-    const modeEraseBtn    = document.getElementById("modeErase");
-    const modeRestoreBtn  = document.getElementById("modeRestore");
-    const toastEl         = document.getElementById("toast");
-
-    // Main display canvas
-    const canvas   = document.getElementById("canvas");
-    const ctx      = canvas.getContext("2d");
-
-    // Offscreen originals and mask
+    // --- Offscreen buffers ---
     const originalCanvas = document.createElement("canvas");
-    const originalCtx    = originalCanvas.getContext("2d");
+    const originalCtx = originalCanvas.getContext("2d");
+    const cutoutCanvas = document.createElement("canvas");
+    const cutoutCtx = cutoutCanvas.getContext("2d");
+    const maskCanvas = document.createElement("canvas");
+    const maskCtx = maskCanvas.getContext("2d");
 
-    const maskCanvas     = document.createElement("canvas");
-    const maskCtx        = maskCanvas.getContext("2d");
+    // --- State ---
+    let img = null;
+    let hasImage = false;
+    let brushSize = parseInt(brushSizeEl.value, 10);
+    let brushMode = "erase"; // "erase" removes, "restore" adds
+    let painting = false;
+    let lastPoint = null;
+    let history = [];
+    let redoStack = [];
+    let viewScale = 1;
+    let viewOffset = { x: 0, y: 0 };
 
-    // State
-    const MODEL_READY_KEY = "bgoneModelReady";
-    let hasImage        = false;
-    let working         = false;
-    let brushMode       = "erase"; // "erase" or "restore"
-    let painting        = false;
-    let lastPointer     = null;
+    // --- Model preload ---
+    overlayMsg.textContent = "Model preloading… first run may take a moment.";
+    preload().then(() => {
+      overlayMsg.textContent = "Model ready. Load an image to begin.";
+    }).catch(() => {
+      overlayMsg.textContent = "Model load failed. You can still load an image; Auto remove may be unavailable.";
+    });
 
-    // History (mask snapshots)
-    const history = { stack: [], redos: [], limit: 30 };
+    // --- Helpers ---
+    function setCanvasSize(w, h) {
+      canvas.width = w;
+      canvas.height = h;
+      originalCanvas.width = w;
+      originalCanvas.height = h;
+      maskCanvas.width = w;
+      maskCanvas.height = h;
+      cutoutCanvas.width = w;
+      cutoutCanvas.height = h;
+    }
+
+    function drawComposite() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (!hasImage) return;
+      // Base image
+      ctx.drawImage(originalCanvas, 0, 0);
+      // Apply mask: erase where mask is white (alpha 255) for erase mode; restore draws cutout
+      // We use mask as a transparency map to punch-out original image
+      const maskData = maskCtx.getImageData(0, 0, canvas.width, canvas.height);
+      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i < maskData.data.length; i += 4) {
+        const m = maskData.data[i]; // grayscale assumed
+        // m=255 means erase; m=0 means keep
+        if (m > 0) {
+          imgData.data[i + 3] = 0;
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
+      // Restore strokes add from cutoutCanvas where mask is 0 but restore strokes marked separately
+      // Simpler approach: draw cutout on top clipped by restore layer
+      // We’ll maintain restore strokes via negative mask (set m=0 when restore) -> already handled by not erasing
+      // If auto-cutout exists, it appears through alpha where original was erased.
+      ctx.save();
+      ctx.globalCompositeOperation = "destination-over";
+      ctx.drawImage(cutoutCanvas, 0, 0);
+      ctx.restore();
+    }
+
     function pushHistory() {
-      if (!hasImage) return;
-      try {
-        const snap = maskCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height);
-        history.stack.push(snap);
-        if (history.stack.length > history.limit) history.stack.shift();
-        history.redos.length = 0;
-      } catch (_e) {}
+      const snap = maskCtx.getImageData(0, 0, canvas.width, canvas.height);
+      history.push(snap);
+      if (history.length > 100) history.shift();
+      redoStack = [];
     }
+
     function undo() {
-      if (history.stack.length <= 1) return;
-      const current = maskCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height);
-      const prev = history.stack[history.stack.length - 2];
-      history.redos.push(current);
-      history.stack.pop();
+      if (history.length === 0) return;
+      const current = maskCtx.getImageData(0, 0, canvas.width, canvas.height);
+      redoStack.push(current);
+      const prev = history.pop();
       maskCtx.putImageData(prev, 0, 0);
-      render();
-      setStatus("Undid last stroke.");
+      drawComposite();
     }
+
     function redo() {
-      if (history.redos.length === 0) return;
-      const redoImg = history.redos.pop();
-      history.stack.push(redoImg);
-      maskCtx.putImageData(redoImg, 0, 0);
-      render();
-      setStatus("Redid stroke.");
+      if (redoStack.length === 0) return;
+      const next = redoStack.pop();
+      const current = maskCtx.getImageData(0, 0, canvas.width, canvas.height);
+      history.push(current);
+      maskCtx.putImageData(next, 0, 0);
+      drawComposite();
     }
 
-    // UI helpers
-    function setStatus(text) { statusEl.textContent = text; }
-    function setWorking(flag) {
-      working = flag;
-      btnRemove.disabled = flag || !hasImage;
-      fileInput.disabled = flag;
-      btnPreload.disabled = flag;
-    }
-    function setDownloadEnabled(flag) { btnDownload.disabled = !flag; }
-    function setTopProgress(pct) {
-      if (pct == null || isNaN(pct)) { topProgress.style.width = "0%"; return; }
-      const clamped = Math.max(0, Math.min(100, pct));
-      topProgress.style.width = clamped + "%";
-    }
-    function showModelReadyUI() {
-      btnPreload.style.display = "none";
-      topProgressWrap.style.display = "none";
-      topReadyDot.style.display = "block";
-      topReadyDot.classList.add("ready");
-      topMessage.textContent = "Model cached in this browser. BGone can now work offline.";
-      setTopProgress(0);
-    }
-    function showToast(msg, type = "info", ttl = 3500) {
-      toastEl.textContent = msg;
-      toastEl.classList.toggle("error", type === "error");
-      toastEl.style.display = "block";
-      setTimeout(() => { toastEl.style.display = "none"; }, ttl);
+    // --- Brush painting ---
+    function paintPoint(x, y) {
+      maskCtx.globalCompositeOperation = "source-over";
+      maskCtx.fillStyle = brushMode === "erase" ? "white" : "black";
+      maskCtx.beginPath();
+      maskCtx.arc(x, y, brushSize / 2, 0, Math.PI * 2);
+      maskCtx.fill();
     }
 
-    function checkModelReady() {
-      if (localStorage.getItem(MODEL_READY_KEY) === "1") showModelReadyUI();
-    }
-    function markModelReady() {
-      localStorage.setItem(MODEL_READY_KEY, "1");
-      showModelReadyUI();
-    }
-
-    // Fit dimensions preserving aspect ratio within bounds
-    function fitImageDimensions(imgWidth, imgHeight, maxWidth = 1400, maxHeight = 900) {
-      let w = imgWidth, h = imgHeight;
-      const ratio = Math.min(maxWidth / w, maxHeight / h, 1);
-      w = Math.round(w * ratio); h = Math.round(h * ratio);
-      return { w, h };
+    function paintLine(x0, y0, x1, y1) {
+      const dx = x1 - x0;
+      const dy = y1 - y0;
+      const steps = Math.max(Math.abs(dx), Math.abs(dy));
+      for (let i = 0; i <= steps; i++) {
+        const x = x0 + (dx * i) / steps;
+        const y = y0 + (dy * i) / steps;
+        paintPoint(x, y);
+      }
     }
 
-    // Render pipeline: draw original, then apply mask via compositing
-    function render() {
-      if (!hasImage) return;
-      const w = canvas.width, h = canvas.height;
-      ctx.clearRect(0, 0, w, h);
-
-      // Draw original
-      ctx.globalCompositeOperation = "source-over";
-      ctx.drawImage(originalCanvas, 0, 0, w, h);
-
-      // Apply mask (destination-in keeps only the intersection)
-      ctx.globalCompositeOperation = "destination-in";
-      ctx.drawImage(maskCanvas, 0, 0, w, h);
-
-      // Reset comp op
-      ctx.globalCompositeOperation = "source-over";
-    }
-
-    // Initialize mask to fully opaque or to model output alpha
-    function initMaskFromImage(img) {
-      const w = canvas.width, h = canvas.height;
-      maskCanvas.width = w; maskCanvas.height = h;
-      // Start with fully opaque mask (white)
-      maskCtx.clearRect(0, 0, w, h);
-      maskCtx.fillStyle = "#fff";
-      maskCtx.fillRect(0, 0, w, h);
-      pushHistory();
-    }
-    function initMaskFromResultBlob(blob) {
-      return new Promise((resolve, reject) => {
-        const url = URL.createObjectURL(blob);
-        const resultImg = new Image();
-        resultImg.onload = () => {
-          URL.revokeObjectURL(url);
-          const { w, h } = { w: canvas.width, h: canvas.height };
-          // Draw result onto a temp canvas to read alpha
-          const temp = document.createElement("canvas");
-          temp.width = w; temp.height = h;
-          const tctx = temp.getContext("2d");
-          tctx.drawImage(resultImg, 0, 0, w, h);
-
-          const imgData = tctx.getImageData(0, 0, w, h);
-          const maskData = maskCtx.createImageData(w, h);
-          // Build mask from result alpha (255 = keep, 0 = remove)
-          const src = imgData.data, dst = maskData.data;
-          for (let i = 0; i < src.length; i += 4) {
-            const a = src[i + 3];
-            dst[i] = 255; dst[i + 1] = 255; dst[i + 2] = 255; dst[i + 3] = a;
-          }
-          maskCtx.putImageData(maskData, 0, 0);
-          pushHistory();
-          resolve();
-        };
-        resultImg.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Error rendering result.")); };
-        resultImg.src = url;
-      });
-    }
-
-    // Load file into originals and mask
-    async function loadFile(file) {
-      if (!file) return;
-      const url = URL.createObjectURL(file);
-      const img = new Image();
-      img.onload = () => {
-        URL.revokeObjectURL(url);
-
-        const { w, h } = fitImageDimensions(img.width, img.height);
-        canvas.width = w; canvas.height = h;
-        originalCanvas.width = w; originalCanvas.height = h;
-
-        originalCtx.clearRect(0, 0, w, h);
-        originalCtx.drawImage(img, 0, 0, w, h);
-
-        hasImage = true;
-        setWorking(false);
-        setDownloadEnabled(true);
-        overlayMsg.style.display = "none";
-        setStatus(`Image loaded (${img.width} × ${img.height}).`);
-        progressText.textContent = "";
-
-        // Initialize mask fully opaque to allow manual erase before AI
-        initMaskFromImage(img);
-        render();
-      };
-      img.onerror = () => {
-        setStatus("Error loading image.");
-        showToast("Could not load that image. Try a different file.", "error");
-      };
-      img.src = url;
-    }
-
-    // Pointer utilities
-    function getCanvasPointer(evt) {
+    function canvasPos(evt) {
       const rect = canvas.getBoundingClientRect();
-      const x = ((evt.clientX - rect.left) / rect.width) * canvas.width;
-      const y = ((evt.clientY - rect.top) / rect.height) * canvas.height;
+      const x = (evt.clientX - rect.left) * (canvas.width / rect.width);
+      const y = (evt.clientY - rect.top) * (canvas.height / rect.height);
       return { x, y };
     }
 
-    function drawStamp(x, y, radius) {
-      // We draw white circles on mask; erase uses destination-out to cut holes; restore uses source-over to add white.
-      maskCtx.save();
-      maskCtx.lineCap = "round";
-      maskCtx.lineJoin = "round";
-      maskCtx.fillStyle = "#fff";
-      maskCtx.strokeStyle = "#fff";
-
-      if (brushMode === "erase") {
-        maskCtx.globalCompositeOperation = "destination-out";
-      } else {
-        maskCtx.globalCompositeOperation = "source-over";
-      }
-
-      maskCtx.beginPath();
-      maskCtx.arc(x, y, radius, 0, Math.PI * 2);
-      maskCtx.fill();
-      maskCtx.restore();
+    // --- File loading & drag/drop ---
+    async function loadImageFile(file) {
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      const image = new Image();
+      image.onload = () => {
+        setCanvasSize(image.width, image.height);
+        originalCtx.clearRect(0, 0, image.width, image.height);
+        originalCtx.drawImage(image, 0, 0);
+        maskCtx.clearRect(0, 0, image.width, image.height);
+        cutoutCtx.clearRect(0, 0, image.width, image.height);
+        img = image;
+        hasImage = true;
+        overlay.style.display = "none";
+        btnRemove.disabled = false;
+        btnDownload.disabled = false;
+        modeEraseBtn.disabled = false;
+        modeRestoreBtn.disabled = false;
+        btnFit.disabled = false;
+        btnCenter.disabled = false;
+        drawComposite();
+      };
+      image.onerror = () => {
+        overlay.style.display = "grid";
+        overlayMsg.textContent = "Failed to load image.";
+      };
+      image.src = url;
     }
 
-    function drawStroke(from, to, radius) {
-      // Draw along the path for smooth strokes
-      maskCtx.save();
-      maskCtx.lineCap = "round";
-      maskCtx.lineJoin = "round";
-      maskCtx.lineWidth = radius * 2;
-      maskCtx.strokeStyle = "#fff";
-      if (brushMode === "erase") {
-        maskCtx.globalCompositeOperation = "destination-out";
-      } else {
-        maskCtx.globalCompositeOperation = "source-over";
-      }
-      maskCtx.beginPath();
-      maskCtx.moveTo(from.x, from.y);
-      maskCtx.lineTo(to.x, to.y);
-      maskCtx.stroke();
-      maskCtx.restore();
-    }
-
-    function startPaint(evt) {
-      if (!hasImage || working) return;
-      painting = true;
-      canvas.setPointerCapture(evt.pointerId);
-      const p = getCanvasPointer(evt);
-      lastPointer = p;
-      const radius = parseInt(brushSizeEl.value, 10);
-      drawStamp(p.x, p.y, radius);
-      render();
-      evt.preventDefault();
-    }
-    function movePaint(evt) {
-      if (!painting) return;
-      const p = getCanvasPointer(evt);
-      const radius = parseInt(brushSizeEl.value, 10);
-      drawStroke(lastPointer, p, radius);
-      lastPointer = p;
-      render();
-      evt.preventDefault();
-    }
-    function endPaint(evt) {
-      if (!painting) return;
-      painting = false;
-      lastPointer = null;
-      pushHistory();
-      evt && evt.preventDefault();
-    }
-
-    // Download PNG of composited result
-    function downloadPNG() {
-      if (!hasImage) return;
-      const tmp = document.createElement("canvas");
-      tmp.width = canvas.width;
-      tmp.height = canvas.height;
-      const tctx = tmp.getContext("2d");
-      // Draw original then apply mask (same as render)
-      tctx.drawImage(originalCanvas, 0, 0, tmp.width, tmp.height);
-      tctx.globalCompositeOperation = "destination-in";
-      tctx.drawImage(maskCanvas, 0, 0, tmp.width, tmp.height);
-      tctx.globalCompositeOperation = "source-over";
-
-      tmp.toBlob(blob => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "bgone.png";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-      }, "image/png");
-    }
-
-    // Events
-    fileInput.addEventListener("change", e => {
-      const file = e.target.files && e.target.files[0];
-      loadFile(file);
+    fileInput.addEventListener("change", (e) => {
+      const file = e.target.files?.[0];
+      loadImageFile(file);
     });
 
-    // Drag & drop
-    ["dragenter", "dragover"].forEach(name => {
-      canvas.addEventListener(name, e => {
-        e.preventDefault(); e.stopPropagation();
-        if (!hasImage) overlayMsg.textContent = "Drop image to load.";
-      });
+    canvasWrap.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      overlayMsg.textContent = "Drop image to load…";
     });
-    ["dragleave", "drop"].forEach(name => {
-      canvas.addEventListener(name, e => {
-        e.preventDefault(); e.stopPropagation();
-        if (!hasImage) overlayMsg.textContent = "Drop an image here, or use “Choose image…”.";
-      });
+    canvasWrap.addEventListener("dragleave", () => {
+      overlayMsg.textContent = hasImage ? "" : "Load an image to begin. You can drag & drop or use the file picker.";
     });
-    canvas.addEventListener("drop", e => {
-      const file = e.dataTransfer.files && e.dataTransfer.files[0];
-      loadFile(file);
+    canvasWrap.addEventListener("drop", (e) => {
+      e.preventDefault();
+      const file = e.dataTransfer.files?.[0];
+      loadImageFile(file);
     });
 
-    // Clear
-    btnClear.addEventListener("click", () => {
-      hasImage = false;
-      canvas.width = 0; canvas.height = 0;
-      originalCanvas.width = 0; originalCanvas.height = 0;
-      maskCanvas.width = 0; maskCanvas.height = 0;
-      overlayMsg.style.display = "block";
-      overlayMsg.textContent = "Drop an image here, or use “Choose image…”.";
-      setStatus("Cleared.");
-      progressText.textContent = "";
-      setDownloadEnabled(false);
-      history.stack.length = 0;
-      history.redos.length = 0;
-    });
-
-    // Preload model
-    btnPreload.addEventListener("click", async () => {
-      setWorking(true);
-      topMessage.textContent = "Downloading AI model… this is a one-time download in this browser.";
-      topProgressWrap.style.display = "block";
-      setTopProgress(5);
-      progressText.textContent = "Preloading AI model…";
-      try {
-        const config = {
-          debug: true,
-          progress: (key, current, total) => {
-            if (!total) return;
-            const pct = (current / total) * 100;
-            progressText.textContent = `Downloading ${key}: ${pct.toFixed(1)}%`;
-            setTopProgress(pct);
-          }
-        };
-        await preload(config);
-        markModelReady();
-        progressText.textContent = "";
-        setStatus("Model downloaded. Ready to remove backgrounds.");
-        showToast("Model downloaded. BGone works offline now.");
-      } catch (err) {
-        const msg = (err && (err.message || err.toString?.())) || "Unknown error";
-        topMessage.textContent = "Error downloading model: " + msg;
-        topProgressWrap.style.display = "none";
-        setTopProgress(0);
-        showToast("Model download failed. Please try again.", "error");
-      } finally {
-        setWorking(false);
-      }
-    });
-
-    // Auto remove background
+    // --- Auto remove background ---
     btnRemove.addEventListener("click", async () => {
-      if (!hasImage || working) return;
-      setWorking(true);
-      setStatus("Removing background…");
-      progressText.textContent = "Preparing image…";
-
+      if (!hasImage) return;
+      overlay.style.display = "grid";
+      overlayMsg.textContent = "Removing background…";
       try {
-        const blob = await new Promise(resolve => originalCanvas.toBlob(resolve, "image/png"));
-        if (!blob) throw new Error("Canvas export returned null blob.");
-
-        const config = {
-          debug: true,
-          progress: (key, current, total) => {
-            if (!total) return;
-            const pct = (current / total) * 100;
-            progressText.textContent = `Downloading ${key}: ${pct.toFixed(1)}%`;
-          }
-        };
-
-        const outBlob = await removeBackground(blob, config);
-        progressText.textContent = "Applying mask…";
-
-        await initMaskFromResultBlob(outBlob);
-        render();
-        setStatus("Background removed. Use the brush to refine, then download PNG.");
-        progressText.textContent = "";
-        markModelReady(); // if this worked, model is available
+        const resultCanvas = await removeBackground(originalCanvas, {
+          output: "canvas",
+          background: "transparent"
+        });
+        // Copy result into cutoutCanvas
+        cutoutCanvas.width = resultCanvas.width;
+        cutoutCanvas.height = resultCanvas.height;
+        cutoutCtx.clearRect(0, 0, cutoutCanvas.width, cutoutCanvas.height);
+        cutoutCtx.drawImage(resultCanvas, 0, 0);
+        overlay.style.display = "none";
+        drawComposite();
       } catch (err) {
-        const msg = (err && (err.message || err.toString?.())) || "Unknown error";
-        setStatus("Error removing background: " + msg);
-        progressText.textContent = "";
-        showToast("Background removal failed. Try re-downloading the model or another image.", "error");
-      } finally {
-        setWorking(false);
+        overlayMsg.textContent = "Auto remove failed. You can use brush tools.";
       }
     });
 
-    // Brush interactions via Pointer Events
-    canvas.addEventListener("pointerdown", startPaint, { passive: false });
-    canvas.addEventListener("pointermove", movePaint, { passive: false });
-    canvas.addEventListener("pointerup", endPaint, { passive: false });
-    canvas.addEventListener("pointercancel", endPaint, { passive: false });
-    canvas.addEventListener("pointerleave", endPaint, { passive: false });
+    // --- Brush controls ---
+    brushSizeEl.addEventListener("input", () => {
+      brushSize = parseInt(brushSizeEl.value, 10);
+    });
 
-    // Mode toggles
-    function setBrushMode(mode) {
-      brushMode = mode;
-      const eraseActive = mode === "erase";
-      modeEraseBtn.classList.toggle("active", eraseActive);
-      modeRestoreBtn.classList.toggle("active", !eraseActive);
-      modeEraseBtn.setAttribute("aria-selected", eraseActive ? "true" : "false");
-      modeRestoreBtn.setAttribute("aria-selected", eraseActive ? "false" : "true");
-    }
-    modeEraseBtn.addEventListener("click", () => setBrushMode("erase"));
-    modeRestoreBtn.addEventListener("click", () => setBrushMode("restore"));
+    modeEraseBtn.addEventListener("click", () => {
+      brushMode = "erase";
+      modeEraseBtn.style.outline = "2px solid var(--blue)";
+      modeRestoreBtn.style.outline = "none";
+    });
 
-    // Keyboard shortcuts
+    modeRestoreBtn.addEventListener("click", () => {
+      brushMode = "restore";
+      modeRestoreBtn.style.outline = "2px solid var(--yellow)";
+      modeEraseBtn.style.outline = "none";
+    });
+
+    // Option key toggles mode while held
+    let optionHeld = false;
     window.addEventListener("keydown", (e) => {
-      if (working) return;
-      switch (e.key.toLowerCase()) {
-        case "e": setBrushMode("erase"); setStatus("Brush: Erase"); break;
-        case "r": setBrushMode("restore"); setStatus("Brush: Restore"); break;
-        case "z": undo(); break;
-        case "y": redo(); break;
-        default: break;
+      if (e.key === "Alt") {
+        optionHeld = true;
+      }
+      // Undo/redo
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z") {
+        e.preventDefault();
+        if (e.shiftKey) redo(); else undo();
+      }
+    });
+    window.addEventListener("keyup", (e) => {
+      if (e.key === "Alt") optionHeld = false;
+    });
+
+    function activeMode() {
+      return optionHeld ? (brushMode === "erase" ? "restore" : "erase") : brushMode;
+    }
+
+    // Mouse painting
+    canvas.addEventListener("mousedown", (e) => {
+      if (!hasImage) return;
+      painting = true;
+      pushHistory();
+      const { x, y } = canvasPos(e);
+      lastPoint = { x, y };
+      const mode = activeMode();
+      maskCtx.fillStyle = mode === "erase" ? "white" : "black";
+      paintPoint(x, y);
+      drawComposite();
+    });
+
+    canvas.addEventListener("mousemove", (e) => {
+      if (!painting || !hasImage) return;
+      const { x, y } = canvasPos(e);
+      const mode = activeMode();
+      maskCtx.fillStyle = mode === "erase" ? "white" : "black";
+      paintLine(lastPoint.x, lastPoint.y, x, y);
+      lastPoint = { x, y };
+      drawComposite();
+    });
+
+    window.addEventListener("mouseup", () => {
+      painting = false;
+      lastPoint = null;
+    });
+
+    // --- View helpers ---
+    function fitToView() {
+      if (!hasImage) return;
+      const wrapRect = canvasWrap.getBoundingClientRect();
+      const maxW = wrapRect.width - 24;
+      const maxH = wrapRect.height - 24;
+      const scaleX = maxW / canvas.width;
+      const scaleY = maxH / canvas.height;
+      viewScale = Math.min(scaleX, scaleY, 1);
+      canvas.style.transformOrigin = "top left";
+      canvas.style.transform = `scale(${viewScale}) translate(${viewOffset.x}px, ${viewOffset.y}px)`;
+    }
+
+    function centerView() {
+      if (!hasImage) return;
+      canvas.style.margin = "0 auto";
+    }
+
+    btnFit.addEventListener("click", fitToView);
+    btnCenter.addEventListener("click", centerView);
+
+    checkerSize.addEventListener("change", (e) => {
+      const size = parseInt(e.target.value, 10);
+      const wrap = document.querySelector(".canvas-wrap");
+      const dark = `repeating-conic-gradient(var(--checker-dark-a) 0% 25%, var(--checker-dark-b) 0% 50%) 50% / ${size}px ${size}px`;
+      const light = `repeating-conic-gradient(var(--checker-light-a) 0% 25%, var(--checker-light-b) 0% 50%) 50% / ${size}px ${size}px`;
+      if (body.classList.contains("light-mode")) {
+        wrap.style.background = light;
+      } else {
+        wrap.style.background = dark;
       }
     });
 
-    // Download
-    btnDownload.addEventListener("click", downloadPNG);
+    // --- Download PNG ---
+    btnDownload.addEventListener("click", () => {
+      if (!hasImage) return;
+      const out = document.createElement("canvas");
+      out.width = canvas.width;
+      out.height = canvas.height;
+      const outCtx = out.getContext("2d");
+      // Draw the current composite
+      // First draw cutout beneath, then original punched by mask alpha
+      outCtx.clearRect(0, 0, out.width, out.height);
+      outCtx.drawImage(cutoutCanvas, 0, 0);
+      // Apply mask to original
+      const base = originalCtx.getImageData(0, 0, out.width, out.height);
+      const maskData = maskCtx.getImageData(0, 0, out.width, out.height);
+      for (let i = 0; i < maskData.data.length; i += 4) {
+        const m = maskData.data[i]; // white=erase
+        if (m > 0) base.data[i + 3] = 0;
+      }
+      outCtx.putImageData(base, 0, 0);
 
-    // Initial
-    setStatus("Load an image to begin.");
-    setDownloadEnabled(false);
-    checkModelReady();
-  </script>
+      const a = document.createElement("a");
+      a.download = "bgone.png";
+      a.href = out.toDataURL("image/png");
+      a.click();
+    });
   </script>
 </body>
 </html>
